@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import argparse
 
-from mawk import p, parse_command, parse_command0, parse_command1, parse_command2, compose, predicate_maker
+from utils import p
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', default=False, action='store_true')  # debug output
@@ -74,8 +74,6 @@ parser.add_argument('c', nargs='*')
 # brief; allows omitting _ in predicate variable names
 parser.add_argument('-b', action='store_false')
 
-# TODO: field/record transformations before cmd?
-
 parser.add_argument('-s', action='store_true')  # streaming
 # TODO: file out
 
@@ -95,38 +93,6 @@ def handle_escapes(x):
 
 
 need_escaping = args.r, args.f, args.R, args.F
-need_escaping = map(handle_escapes)(need_escaping)
+need_escaping = map(handle_escapes)(need_escaping)  # TODO does this work? mutability....
 
 p(args)
-
-
-def field_type(x):
-    return eval(args.t)(x) if x is not None else None
-
-
-def make_predicates(i, ix, v, vx):
-    return filter(bool)((predicate_maker('wb'[j % 2], j // 2, vals) for j, vals in enumerate((i, ix, v, vx))))
-
-
-fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
-ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
-fts = map(parse_command0)(args.ft)
-
-rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-rtps = map(parse_command1)(args.rtp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-rts = map(parse_command1)(args.rt)
-
-r20 = parse_command2(args.r20)
-r21 = parse_command2(args.r21)
-r10 = map(parse_command1)(args.r10)
-
-use_stdin_raw = args.c and args.c[0] == '-'
-use_stdin_py = args.c and args.c[0] == '.'
-if use_stdin_raw:
-    cmds = map(parse_command2)(args.c[1:])  # command1 in streaming case?
-elif use_stdin_py:
-    cmds = map(parse_command0)(args.c[1:])
-else:
-    cmds = map(parse_command)(args.c)  # compose probably doens't work here, zero args...
-
-cmds = compose(cmds)
