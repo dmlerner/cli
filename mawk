@@ -5,11 +5,16 @@ import sys
 import time
 import re
 from functools import reduce, partial, wraps
+import inspect
 
-# The problem is due to SIGPIPE handling. You can solve this problem using the following code:
-
+# Fix for broken pipe error I don't quite eunderstand
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
+_map = map
+def p(*x):
+    #if args.d:
+    if True:
+        sys.stderr.write('\n'.join(_map(str, x)) + '\n\n')
 
 
 def identity(*x):
@@ -23,18 +28,118 @@ def identity(*x):
 def listify(f):
     return lambda *x: list(f(*x))
 
+def satisfied(f, *args, **kwargs):
+    try:
+        p('sig, arg, kwarg', inspect.signature(f), args, kwargs)
+        inspect.signature(f).bind(*args, **kwargs)
+        p('returning true')
+        return True
+    except:
+        p('returning false')
+        return False
 
 def curry(f):
-    return lambda *x: partial(f, *x)
+    @wraps(f)
+    def curried(*args, **kwargs):
+        #pdb.set_trace()
+        p('curried calls sat')
+        if satisfied(f, *args, **kwargs):
+            return f(*args, **kwargs)
+        #assert args or kwargs
+        return curry(partial(f, *args, **kwargs))
+    return curried
 
+@curry
+def map(f, x):
+    return list(_map(f, x))
 
+_filter = filter
+@curry
+def filter(f, x):
+    return list(_filter(f, x))
+'''
+map = curry(map)
 filter, map = map(curry, map(listify, (filter, map)))
 reduce = curry(reduce)
+'''
+if False:
+    add = lambda x: x+1
+    m = map(add)
+    assert m([1,2]) == [2,3]
+    @curry
+    def g(a,b):
+        return a+b
+    assert g(1)(2) == 3
+    assert g(1,2) == 3
 
+    assert map(g(1))([2,3]) == [3,4]
 
-def p(*x):
-    if args.d:
-        sys.stderr.write('\n'.join(map(str)(x)) + '\n\n')
+def poovector(f):
+    # Assume domain is last of args. 
+    # TODO: that's stupid. Means you can't pass it as a keyword
+    # eg f(a=1, b=2) can't be used with vector
+    @wraps(f)
+    def vf(*args, **kwargs):
+        cf = curry(f)
+        if not args:
+            return cf(**kwargs) # need curried here, because f may not have enough args, even though we have none to offer
+        # @vector
+        # def f(x): return x + 1
+        # g=f()
+        # assert g(2) == 3
+        # important: only if args kwargs satisfies f do we actually know args[-1] to be domain
+        params, domain = args[:-1], args[-1]
+        p('params', params, 'domain', domain, 'kwargs', kwargs)
+        if type(domain) in (list, tuple):
+            return map(cf(*params, **kwargs))(domain)
+        #return cf(*params, **kwargs)(domain)
+        return cf(*args, **kwargs)
+    return vf
+
+def vector(f):
+    @wraps(f)
+    def vf(*args, **kwargs):
+        p('vf calls sat')
+        if satisfied(f, *args, **kwargs):
+            if args:
+                params, domain = args[:-1], args[-1]
+                if type(domain) in (list, tuple):
+                    return map(curry(f)(*params, **kwargs))(domain)
+            return f(*args, **kwargs)
+        #return vector(partial(f, *args, **kwargs)) # partial? curry? 
+        return vector(curry(f)(*args, **kwargs)) # partial? curry? 
+    return vf
+p('.....')
+if True:
+    @vector
+    def f(a, b, c, d=1):
+        return 1000*a + 100*b + 10*c + d
+    '''
+    y = f(2, 3, c=4)
+    p('y=', y, y==20304)
+    assert y == 20304
+    p()
+    y = f(1, [2,3], c=4)
+    p('y=', y, y==[10204, 10304])
+    assert y == [10204, 10304]
+    '''
+
+    p('need2')
+    need2 = f(1)
+    p('need1')
+    need1 = need2(2)
+    p('test1')
+    assert need1(3) == 1231
+    p('testmap')
+    assert need1([7, 8]) == [1271, 1281]
+    p('.....')
+if False:
+    @curry
+    def g(a,b,c=1):
+        print(a,b,c)
+    g(1)(2)
+1/0
+
 
 
 parser = argparse.ArgumentParser()
@@ -127,16 +232,11 @@ assert out_rank >= 0
 
 
 def handle_escapes(x):
-    x = x.replace('\\n', '\n')
-    x = x.replace('\\r', '\r')
-    x = x.replace('\\t', '\t')
-    return x
+    return x.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
 
 
-args.r = handle_escapes(args.r)
-args.f = handle_escapes(args.f)
-args.R = handle_escapes(args.R)
-args.F = handle_escapes(args.F)
+need_escaping = args.r, args.f, args.R, args.F
+need_escaping = map(handle_escapes)(need_escaping)
 
 p(args)
 
@@ -171,30 +271,11 @@ def _make_subs(prefix):
     numeric_range_end = r'x([\d]+),', r'x[int(\1):]'  # x7,
     numeric = r'x([\d]+)', r'x[\1]'  # x7
     templates = range, numeric_range, numeric_range_start, numeric_range_end, numeric
-    return map(lambda template:
-               map(lambda fr: fr.replace('x', prefix))(template)
-               )(templates)
+    return map(map(replace('x', prefix)))(templates)
 
 
-def make_subs(*ps):
-    return reduce(list.__add__)(map(_make_subs)(ps))
-
-
-def catch_exceptions(f):  # too heavy handed. instead default value syntax?
-    f.errors = 0
-    f.total = 0
-
-    @wraps(f)
-    def catches_exceptions(*args, **kwargs):
-        try:
-            f.total += 1
-            return f(*args, **kwargs)
-        except BaseException:
-            f.errors += 1
-            error_ratio = f.errors / f.total
-            if f.total > 10 and error_ratio > .1:
-                p('error ratio for %s is %s (%s / %s)' % (f, error_ratio, f.errors, f.total))
-    return catches_exceptions
+def make_subs(prefixes):
+    return sum(map(_make_subs)(ps), [])
 
 
 def parse_command(cmd):
@@ -345,17 +426,21 @@ def dict_vmap(f):
 def dict_kmap(f):
     return dict_map(lambda kv: (f(kv[0]), kv[1]))
 
+
 def vmap(f):
     return lambda d: map(f)(d.values())
 
+
 def kmap(f):
     return lambda d: map(f)(d.keys())
+
 
 def filter_records(records, fps, rps):
     return dict_vmap(dict_multi_filter(fps))(dict_multi_filter(rps)(records))
 
 
-def split(x, delim, remove=True, combine_consecutive=False):
+@curry
+def split(delim='\n', remove=True, combine_consecutive=False, x=''):
     if delim is None:
         return x
     if combine_consecutive:
@@ -368,24 +453,35 @@ def split(x, delim, remove=True, combine_consecutive=False):
 
     parts = x.split(delim)
     if not remove:
-        return map(lambda p: p + delim)(parts) + [parts[-1]]
+        return map(add(delim))(parts) + [parts[-1]]
     return parts
+
 
 @curry
 def join(delim='', x=[]):
     return delim.join(map(str)(x))
 
 
+@curry
+def replace(find, replace, x):
+    return x.replace(find, replace)
+
+
 def index_dict(l):
     return dict(enumerate(l))
+
+
+@curry
+def add(a, b):
+    return a + b
 
 
 def parse(raw_records, ri_start=0):
     p('parse', repr(raw_records), ri_start)
     records = dict_vmap(index_dict)(
-        dict_kmap(lambda k: k + ri_start)(
+        dict_kmap(add(ri_start))(
             index_dict(map(map(field_type))(
-                map(lambda r: split(r, args.f, args.fx, args.fc))(
+                map(split(args.f, args.fx, args.fc))(
                     filter(identity)(
                         split(raw_records.strip(), args.r, args.rx, args.rc)
                     ))))))
@@ -397,10 +493,17 @@ def format_output(reduced):
     if args.p:
         return repr(reduced)
     try:
-        if out_rank == 2:  
-            return join(args.R)(vmap(join(args.F))(reduced))
+        if out_rank == 2:
+            if not args.fx:
+                reduced = map(vmap(replace(args.f, '')))(reduced)
+            reduced = vmap(join(args.F))(reduced)
+            if not args.rx:
+                reduced = vmap(replace(args.r, ''))(reduced)
+            return join(args.R)(reduced)
         if out_rank == 1:
-            return args.R.join(map(str)(reduced.values()))
+            if not args.rx:
+                reduced = '?'
+            return vmap(join(args.R))(reduced)
         return str(reduced)
     except BaseException:
         p('format_output error')
