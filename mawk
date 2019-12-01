@@ -33,7 +33,6 @@ reduce = curry(reduce)
 
 
 def p(*x):
-    #print(*x, sep='\n', end='\n' * 2)
     if args.d:
         sys.stderr.write('\n'.join(map(str)(x)) + '\n\n')
 
@@ -100,7 +99,6 @@ parser.add_argument('-rt', default=[], nargs='*')  # (ri, { fi: f }) -> { fi: f'
 parser.add_argument('-r21', nargs='?')  # { ri: { fi: f} } -> { k: v }
 parser.add_argument('-r10', default=[], nargs='*')  # { k: v } -> v
 parser.add_argument('-r20', nargs='?')  # { ri: { fi: f} } -> v
-parser.add_argument('-fail', action='store_true')  # { ri: { fi: f} } -> v
 
 
 # if c[0] is '-', use stdin
@@ -113,14 +111,9 @@ parser.add_argument('-b', action='store_false')
 # TODO: field/record transformations before cmd?
 
 parser.add_argument('-s', action='store_true')  # streaming
-parser.add_argument('-fuck', action='store_true')  # streaming
 # TODO: file out
 
 args = parser.parse_args()
-if args.fail:
-    1 / 0
-if args.fuck:
-    args = parser.parse_args(input('fuck'))
 
 out_rank = 2
 if args.r20:
@@ -352,6 +345,11 @@ def dict_vmap(f):
 def dict_kmap(f):
     return dict_map(lambda kv: (f(kv[0]), kv[1]))
 
+def vmap(f):
+    return lambda d: map(f)(d.values())
+
+def kmap(f):
+    return lambda d: map(f)(d.keys())
 
 def filter_records(records, fps, rps):
     return dict_vmap(dict_multi_filter(fps))(dict_multi_filter(rps)(records))
@@ -373,13 +371,17 @@ def split(x, delim, remove=True, combine_consecutive=False):
         return map(lambda p: p + delim)(parts) + [parts[-1]]
     return parts
 
+@curry
+def join(delim='', x=[]):
+    return delim.join(map(str)(x))
+
 
 def index_dict(l):
     return dict(enumerate(l))
 
 
 def parse(raw_records, ri_start=0):
-    #p('parse', repr(raw_records), ri_start)
+    p('parse', repr(raw_records), ri_start)
     records = dict_vmap(index_dict)(
         dict_kmap(lambda k: k + ri_start)(
             index_dict(map(map(field_type))(
@@ -391,16 +393,12 @@ def parse(raw_records, ri_start=0):
     return kept
 
 
-def fmap(f, monad):
-    return map(lambda x: map(f, x), monad)
-
-
 def format_output(reduced):
     if args.p:
         return repr(reduced)
     try:
-        if out_rank == 2:  # TODO: if I didn't remove splitters, don't add them back
-            return args.R.join(args.F.join(map(str)(r.values())) for r in reduced.values())
+        if out_rank == 2:  
+            return join(args.R)(vmap(join(args.F))(reduced))
         if out_rank == 1:
             return args.R.join(map(str)(reduced.values()))
         return str(reduced)
@@ -497,7 +495,7 @@ def process(records, ri_start=0):
 
 
 def write_out(x):
-    x = x.strip()
+    x = str(x).strip()
     if x:
         print(x)
 
