@@ -106,8 +106,8 @@ def vector(f):
                 if type(domain) in (list, tuple):
                     return map(curry(f)(*params, **kwargs))(domain)
             return f(*args, **kwargs)
-        #return vector(partial(f, *args, **kwargs)) # partial? curry? 
-        return vector(curry(f)(*args, **kwargs)) # partial? curry? 
+        return vector(partial(f, *args, **kwargs)) # partial? curry? 
+        #return vector(curry(f)(*args, **kwargs)) # partial? curry? 
     return vf
 p('.....')
 if True:
