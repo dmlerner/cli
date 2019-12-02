@@ -1,30 +1,21 @@
 import inspect
 from functools import wraps, reduce, partial
-import sys
-
-
-def p(*x):
-    # if args.d:
-    if True:
-        sys.stderr.write('\n'.join(_map(str, x)) + '\n\n')
+from logger import p
 
 
 def satisfied(f, *args, **kwargs):
     try:
-        p('sig, arg, kwarg', inspect.signature(f), args, kwargs)
         inspect.signature(f).bind(*args, **kwargs)
-        p('returning true')
         return True
     except BaseException:
-        p('returning false')
-        return False
+        pass
 
 
 def curry(f):
     @wraps(f)
     def curried(*args, **kwargs):
-        # pdb.set_trace()
-        p('curried calls sat')
+        p('curried', *args, **kwargs)
+        p('/curry arg')
         if satisfied(f, *args, **kwargs):
             return f(*args, **kwargs)
         # assert args or kwargs
@@ -44,12 +35,14 @@ def filter(f, x):
     return list(_filter(f, x))
 
 
+_reduce = reduce
+reduce = curry(_reduce)
+
 '''
 def listify(f):
     return lambda *x: list(f(*x))
 map = curry(map)
 filter, map = map(curry, map(listify, (filter, map)))
-reduce = curry(reduce)
 '''
 
 
@@ -115,15 +108,14 @@ def kmap(f):
     return lambda d: map(f)(d.keys())
 
 
-
-
 @curry
-def split(delim='\n', remove=True, combine_consecutive=False, x=''):
+def split(delim, remove, combine_consecutive, x):
     if delim is None:
         return x
     if combine_consecutive:
         while delim * 2 in x:  # TODO: speed this up
             x = x.replace(delim * 2, delim)
+    i = 0
     for i, c in enumerate(reversed(x)):
         if c != delim:
             break
@@ -153,13 +145,12 @@ def index_dict(l):
 def add(a, b):
     return a + b
 
+
 def identity(*x):
     if len(x) == 0:
         return
     if len(x) == 1:
         return x[0]
     return x
-
-
 
 

@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import argparse
-
-from utils import p
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', default=False, action='store_true')  # debug output
@@ -77,22 +76,30 @@ parser.add_argument('-b', action='store_false')
 parser.add_argument('-s', action='store_true')  # streaming
 # TODO: file out
 
-args = parser.parse_args()
+parser.add_argument('-test', action='store_true')
 
-out_rank = 2
-if args.r20:
-    assert not args.r21 and not args.r10
-    out_rank = 0
-opts = (args.r21, *args.r10)
-out_rank -= sum(map(bool)(opts))
-assert out_rank >= 0
+args = parser.parse_args()
 
 
 def handle_escapes(x):
     return x.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
 
 
-need_escaping = args.r, args.f, args.R, args.F
-need_escaping = map(handle_escapes)(need_escaping)  # TODO does this work? mutability....
+args.r, args.f, args.R, args.F = map(handle_escapes, (args.r, args.f, args.R, args.F))
+
+outfile = open('log.txt', 'w')
+
+def get_location(n=2):
+    stack = inspect.stack()
+    s = stack[n]
+    filename = s.filename
+    return ' '.join(str(x).strip() for x in (filename, s.code_context[0], s.lineno))
+
+def p(*x):
+    if args.d:
+        log = '\n'.join(map(str, x)) + '\n\n'
+        sys.stderr.write(log)
+        outfile.write(log)
+
 
 p(args)

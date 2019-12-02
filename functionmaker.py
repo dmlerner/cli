@@ -1,4 +1,8 @@
-from utils import p
+import re
+from args import args
+from logger import p
+from utils import vector, replace, map, compose, filter, flatten, identity
+from formatter import use_stdin_raw, use_stdin_py
 
 
 def predicate_maker(mode, arg, vals):
@@ -10,30 +14,9 @@ def predicate_maker(mode, arg, vals):
     p(mode, arg, vals)
     return lambda xi_x: (xi_x[arg] in vals) == (mode == 'w')
 
+
 def make_predicates(i, ix, v, vx):
     return filter(bool)((predicate_maker('wb'[j % 2], j // 2, vals) for j, vals in enumerate((i, ix, v, vx))))
-
-class FunctionMaker:
-    def __init__(self, args):
-        fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
-        ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
-        fts = map(parse_command0)(args.ft)
-
-        rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-        rtps = map(parse_command1)(args.rtp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-        rts = map(parse_command1)(args.rt)
-
-        r20 = parse_command2(args.r20)
-        r21 = parse_command2(args.r21)
-        r10 = map(parse_command1)(args.r10)
-
-        if use_stdin_raw:
-            cmds = map(parse_command2)(args.c[1:])  # command1 in streaming case?
-        elif use_stdin_py:
-            cmds = map(parse_command0)(args.c[1:])
-        else:
-            cmds = map(parse_command)(args.c)  # compose probably doens't work here, zero args...
-        cmds = compose(cmds)
 
 
 def sub_all(source, *subs):
@@ -64,10 +47,6 @@ def make_subs(prefix):
     numeric = r'x([\d]+)', r'x[\1]'  # x7
     templates = range, numeric_range, numeric_range_start, numeric_range_end, numeric
     return map(map(replace('x', prefix)))(templates)
-
-
-# def make_subs(prefixes):
-    # return sum(map(_make_subs)(ps), [])
 
 
 def parse_command(cmd):
@@ -161,3 +140,24 @@ def f(d):
     p(func)
     exec(compile(func, '<string>', 'exec'))
     return locals()['f']
+
+
+fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
+ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
+fts = map(parse_command0)(args.ft)
+
+rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
+rtps = map(parse_command1)(args.rtp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
+rts = map(parse_command1)(args.rt)
+
+r20 = parse_command2(args.r20)
+r21 = parse_command2(args.r21)
+r10 = map(parse_command1)(args.r10)
+
+if use_stdin_raw:
+    cmds = map(parse_command2)(args.c[1:])  # command1 in streaming case?
+elif use_stdin_py:
+    cmds = map(parse_command0)(args.c[1:])
+else:
+    cmds = map(parse_command)(args.c)  # compose probably doens't work here, zero args...
+cmds = compose(cmds)

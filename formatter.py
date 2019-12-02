@@ -1,18 +1,34 @@
+from args import args
+from logger import p
+import pdb
+import sys
+from utils import dict_kmap, dict_vmap, index_dict, \
+    add, split, identity, vmap, replace, map, filter, join
+from test import mock_stdin
+
+
 def parse(raw_records, ri_start=0):
-    p('parse', repr(raw_records), ri_start)
+    p('parse', raw_records, repr(raw_records), ri_start)
     records = dict_vmap(index_dict)(
         dict_kmap(add(ri_start))(
             index_dict(map(map(field_type))(
                 map(split(args.f, args.fx, args.fc))(
                     filter(identity)(
-                        split(raw_records.strip(), args.r, args.rx, args.rc)
+                        split(args.r, args.rx, args.rc, raw_records.strip())
                     ))))))
-    kept = filter_records(records, fps, rps)  # TODO: move to mawk
-    return kept
+    return records
 
 
 def field_type(x):
     return eval(args.t)(x) if x is not None else None
+
+
+def get_input():
+    p('get_input, args.test = ', args.test)
+    stdin = sys.stdin if not args.test else mock_stdin
+    if args.s:
+        return record_iterator(stdin, args.r)
+    return stdin.read()
 
 
 def record_iterator(x, delim):  # TODO is this actually correct; probalby yes
@@ -66,9 +82,6 @@ def out_rank(args):
     return out_rank
 
 
-class Formatter:
-    def __init__(self, args):
-        self.args = args
-        self.use_stdin_raw = args.c and args.c[0] == '-'
-        self.use_stdin_py = args.c and args.c[0] == '.'
-        self.out_rank = out_rank(args)
+use_stdin_raw = args.c and args.c[0] == '-'
+use_stdin_py = args.c and args.c[0] == '.'
+out_rank = out_rank(args)

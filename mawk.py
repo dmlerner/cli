@@ -1,13 +1,10 @@
 #!/usr/bin/python3
 import pdb
-import sys
-
-from utils import p, vector, curry, map, reduce, add, index_dict, dict_vmap, dict_kmap, split, identity, dict_multi_filter, dict_map, join, vmap, kmap, replace
-from args import out_rank, args
-
-# Fix for broken pipe error I don't quite eunderstand
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL)
+from utils import reduce, dict_vmap, dict_multi_filter
+from formatter import parse, format_output
+from args import args
+from logger import p
+from functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
 
 
 def filter_records(records, fps, rps):
@@ -52,7 +49,9 @@ def do_reduce(rs):
 
 
 def process(records, ri_start=0):
-    kept = parse(records, ri_start)
+    p('process', d=True)
+    records = parse(records, ri_start)
+    kept = filter_records(records, fps, rps)
     p('kept', kept)
     transformed = transform(kept)
     p('transformed', transformed)
@@ -60,28 +59,3 @@ def process(records, ri_start=0):
     p('reduced', reduced)
     formatted = format_output(reduced)
     return kept, transformed, reduced, formatted
-
-
-def main():
-    if use_stdin_raw or use_stdin_py:  # TODO clean this up
-        if args.s:
-            for ri, raw in enumerate(record_iterator(sys.stdin, args.r)):
-                if use_stdin_raw:
-                    kept, transformed, reduced, formatted = process(raw, ri)
-                    write_out(formatted)
-                else:  # use_stdin_py
-                    out = cmds((ri, eval(raw)))
-                    p('out', out)
-                    write_out(format_output(out))
-        else:
-            raw = sys.stdin.read()
-            if use_stdin_raw:
-                kept, transformed, reduced, formatted = process(raw)
-                write_out(formatted)
-            else:  # use_stdin_py
-                out = cmds((None, eval(raw)))
-                p('out', out)
-                write_out(format_output(out))
-    else:
-        write_out(cmds(None))  # TODO is it going to be a problem that I'm passing a dummy arugment?
-
