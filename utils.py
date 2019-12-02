@@ -1,21 +1,21 @@
 import inspect
-from functools import wraps, reduce, partial
-from logger import p
+from functools import wraps, partial
+from functools import reduce as _reduce
 
 
 def satisfied(f, *args, **kwargs):
     try:
-        inspect.signature(f).bind(*args, **kwargs)
+        sig = inspect.signature(f)
+        sig.bind(*args, **kwargs)
         return True
     except BaseException:
         pass
+    return False
 
 
 def curry(f):
     @wraps(f)
     def curried(*args, **kwargs):
-        p('curried', *args, **kwargs)
-        p('/curry arg')
         if satisfied(f, *args, **kwargs):
             return f(*args, **kwargs)
         # assert args or kwargs
@@ -35,8 +35,15 @@ def filter(f, x):
     return list(_filter(f, x))
 
 
-_reduce = reduce
-reduce = curry(_reduce)
+@curry
+def reduce(a, b, c):
+    return _reduce(a, b, c)
+
+
+@curry
+def r(a, b, c):
+    return _reduce(a, b, c)
+
 
 '''
 def listify(f):
@@ -72,27 +79,32 @@ def flatten(xs):
     return reduce(type(xs[0]).__add__)(xs)
 
 
-def compose(fs):
-    return lambda y: reduce(lambda y, f: f(y))(fs, y)
+@curry
+def compose(fs, y):
+    return reduce(lambda y, f: f(y))(fs, y)
 
 
-def check_all(fs):
-    return lambda x: all(map(lambda f: f(x))(fs))
+@curry
+def check_all(fs, x):
+    return all(map(lambda f: f(x))(fs))
 
 
-def multi_filter(fs):
-    return lambda xs: filter(check_all(fs))(xs)
+@curry
+def multi_filter(fs, xs):
+    return filter(check_all(fs))(xs)
 
 
-def dict_multi_filter(fs):
-    return lambda d: dict(multi_filter(fs)(d.items()))
+@curry
+def dict_multi_filter(fs, d):
+    return dict(multi_filter(fs)(d.items()))
 
 
-def dict_map(f):
-    return lambda d: dict(map(f)(d.items()))
+@curry
+def dict_map(f, d):
+    return dict(map(f)(d.items()))
 
 
-def dict_vmap(f):
+def dict_vmap(f):  # why do I have these as one argument tuple functions? something about parse command...
     return dict_map(lambda kv: (kv[0], f(kv[1])))
 
 
@@ -100,12 +112,24 @@ def dict_kmap(f):
     return dict_map(lambda kv: (f(kv[0]), kv[1]))
 
 
-def vmap(f):
-    return lambda d: map(f)(d.values())
+@curry
+def dict_v(f, d):
+    return f(d.values())
 
 
-def kmap(f):
-    return lambda d: map(f)(d.keys())
+@curry
+def dict_k(f, d):
+    return f(d.keys())
+
+
+@curry
+def vmap(f, d):  # aka list(dict_vmap(f).values())
+    return map(f)(d.values())
+
+
+@curry
+def kmap(f, d):
+    return map(f)(d.keys())
 
 
 @curry
@@ -128,7 +152,7 @@ def split(delim, remove, combine_consecutive, x):
 
 
 @curry
-def join(delim='', x=[]):
+def join(delim, x):
     return delim.join(map(str)(x))
 
 
@@ -152,5 +176,3 @@ def identity(*x):
     if len(x) == 1:
         return x[0]
     return x
-
-

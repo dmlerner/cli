@@ -86,20 +86,3 @@ def handle_escapes(x):
 
 
 args.r, args.f, args.R, args.F = map(handle_escapes, (args.r, args.f, args.R, args.F))
-
-outfile = open('log.txt', 'w')
-
-def get_location(n=2):
-    stack = inspect.stack()
-    s = stack[n]
-    filename = s.filename
-    return ' '.join(str(x).strip() for x in (filename, s.code_context[0], s.lineno))
-
-def p(*x):
-    if args.d:
-        log = '\n'.join(map(str, x)) + '\n\n'
-        sys.stderr.write(log)
-        outfile.write(log)
-
-
-p(args)

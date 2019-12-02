@@ -1,9 +1,8 @@
 from args import args
 from logger import p
-import pdb
 import sys
 from utils import dict_kmap, dict_vmap, index_dict, \
-    add, split, identity, vmap, replace, map, filter, join
+    add, split, identity, vmap, replace, map, filter, join, dict_v
 from test import mock_stdin
 
 
@@ -48,18 +47,15 @@ def format_output(reduced):
     if args.p:
         return repr(reduced)
     try:
+        if out_rank == 0:
+            return str(reduced)
         if out_rank == 2:
             if not args.fx:
-                reduced = map(vmap(replace(args.f, '')))(reduced)
-            reduced = vmap(join(args.F))(reduced)
-            if not args.rx:
-                reduced = vmap(replace(args.r, ''))(reduced)
-            return join(args.R)(reduced)
-        if out_rank == 1:
-            if not args.rx:
-                reduced = '?'
-            return vmap(join(args.R))(reduced)
-        return str(reduced)
+                reduced = dict_vmap(dict_vmap(replace(args.f, '')))(reduced)
+            reduced = dict_vmap(dict_v(join(args.F)))(reduced)
+        if not args.rx:
+            reduced = dict_vmap(replace(args.r, ''))(reduced)
+        return dict_v(join(args.R))(reduced)
     except BaseException:
         p('format_output error')
         return str(reduced)
