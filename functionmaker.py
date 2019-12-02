@@ -1,8 +1,6 @@
 import re
-from args import args
 from logger import p
 from utils import vector, replace, map, compose, filter, flatten, identity
-from formatter import use_stdin_raw, use_stdin_py
 
 
 def predicate_maker(mode, arg, vals):
@@ -107,7 +105,7 @@ def f(di_d):
     # TODO: if foo like bar, ie any(bar in f for f in foo)
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
-    func = template % sub_all(cmd, flatten(make_subs('k', 'K', 'v', 'V')))
+    func = template % sub_all(cmd, flatten(make_subs(['k', 'K', 'v', 'V'])))
     p(func)
     exec(compile(func, '<string>', 'exec'))
     return locals()['f']
@@ -142,22 +140,32 @@ def f(d):
     return locals()['f']
 
 
-fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
-ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
-fts = map(parse_command0)(args.ft)
+def init():
+    global use_stdin_raw, use_stdin_py
+    from formatter import use_stdin_raw, use_stdin_py
+    global args
+    from arguments import args
 
-rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-rtps = map(parse_command1)(args.rtp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-rts = map(parse_command1)(args.rt)
+    global fps, ftps, fts
+    fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
+    ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
+    fts = map(parse_command0)(args.ft)
 
-r20 = parse_command2(args.r20)
-r21 = parse_command2(args.r21)
-r10 = map(parse_command1)(args.r10)
+    global rps, rtps, rts
+    rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
+    rtps = map(parse_command1)(args.rtp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
+    rts = map(parse_command1)(args.rt)
 
-if use_stdin_raw:
-    cmds = map(parse_command2)(args.c[1:])  # command1 in streaming case?
-elif use_stdin_py:
-    cmds = map(parse_command0)(args.c[1:])
-else:
-    cmds = map(parse_command)(args.c)  # compose probably doens't work here, zero args...
-cmds = compose(cmds)
+    global r20, r21, r10
+    r20 = parse_command2(args.r20)
+    r21 = parse_command2(args.r21)
+    r10 = map(parse_command1)(args.r10)
+
+    global cmds
+    if use_stdin_raw:
+        cmds = map(parse_command2)(args.c[1:])  # command1 in streaming case?
+    elif use_stdin_py:
+        cmds = map(parse_command0)(args.c[1:])
+    else:
+        cmds = map(parse_command)(args.c)  # compose probably doens't work here, zero args...
+    cmds = compose(cmds)

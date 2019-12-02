@@ -1,9 +1,8 @@
-from args import args
 from logger import p
 import sys
 from utils import dict_kmap, dict_vmap, index_dict, \
-    add, split, identity, vmap, replace, map, filter, join, dict_v
-from test import mock_stdin
+    add, split, identity, replace, map, filter, join, dict_v
+import test
 
 
 def parse(raw_records, ri_start=0):
@@ -24,15 +23,21 @@ def field_type(x):
 
 def get_input():
     p('get_input, args.test = ', args.test)
-    stdin = sys.stdin if not args.test else mock_stdin
+    stdin = sys.stdin if not args.test else test.mock_stdin
+    it = record_iterator(stdin, args.r)
     if args.s:
-        return record_iterator(stdin, args.r)
+        return it
     return stdin.read()
+    x = list(it)
+    p(x)
+    return args.r.join(x)
+    #return args.r.join(list(it))
 
 
-def record_iterator(x, delim):  # TODO is this actually correct; probalby yes
+def record_iterator(x, delim):
     cache = []
     for line in x:
+        #p('line', repr(line))
         # line += '\n'
         records = line.split(delim)
         cache.append(records[0])
@@ -44,6 +49,7 @@ def record_iterator(x, delim):  # TODO is this actually correct; probalby yes
 
 
 def format_output(reduced):
+    p(reduced)
     if args.p:
         return repr(reduced)
     try:
@@ -52,9 +58,12 @@ def format_output(reduced):
         if out_rank == 2:
             if not args.fx:
                 reduced = dict_vmap(dict_vmap(replace(args.f, '')))(reduced)
+                p(reduced)
             reduced = dict_vmap(dict_v(join(args.F)))(reduced)
+            p(reduced)
         if not args.rx:
             reduced = dict_vmap(replace(args.r, ''))(reduced)
+            p(reduced)
         return dict_v(join(args.R))(reduced)
     except BaseException:
         p('format_output error')
@@ -78,6 +87,9 @@ def out_rank(args):
     return out_rank
 
 
-use_stdin_raw = args.c and args.c[0] == '-'
-use_stdin_py = args.c and args.c[0] == '.'
-out_rank = out_rank(args)
+def init():
+    global use_stdin_raw, use_stdin_py, out_rank, args
+    from arguments import args
+    use_stdin_raw = args.c and args.c[0] == '-'
+    use_stdin_py = args.c and args.c[0] == '.'
+    out_rank = out_rank(args)

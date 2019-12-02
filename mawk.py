@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 from utils import reduce, dict_vmap, dict_multi_filter, compose
 from formatter import parse, format_output
-from args import args
 from logger import p
-from functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
 
 
 def filter_records(records, fps, rps):
@@ -20,7 +18,6 @@ def transform(records):
                 if fi in to_transform[ri]:
                     # Note that fields are transformed before records, for no particularly compelling reason
                     out[ri][fi] = compose(fts)(out[ri][fi])
-                    #out[ri][fi] = reduce(lambda f, ft: ft((fi, f)))(fts, out[ri][fi])
             # By design, this may crash, if rt tries to access something that wasn't kept around
             p('rts, out[ri]', rts, out[ri])
             out[ri] = reduce(lambda r, rt: rt((ri, r)))(rts, out[ri])
@@ -41,7 +38,7 @@ def do_reduce(rs):
             p('r10', rs)
             rs = r10(rs)
     elif args.r10:
-        p('map r10', rs)
+        p('map r10', rs, r10)
         rs = dict_vmap(r10[0])(rs)
         if len(r10) == 2:
             rs = r10[1](rs)
@@ -49,7 +46,7 @@ def do_reduce(rs):
 
 
 def process(records, ri_start=0):
-    p('process')
+    p('process', records)
     records = parse(records, ri_start)
     kept = filter_records(records, fps, rps)
     p('kept', kept)
@@ -59,3 +56,9 @@ def process(records, ri_start=0):
     p('reduced', reduced)
     formatted = format_output(reduced)
     return kept, transformed, reduced, formatted
+
+
+def init():
+    global ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps, args
+    from functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
+    from arguments import args

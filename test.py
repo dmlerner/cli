@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 
-from utils import curry, vector, map
+from utils import curry, vector, map, equal
 from logger import p
+import mawk
 
 dirs = '''\
 0\t~/Dropbox/scripts/cli
@@ -28,14 +29,15 @@ class MockStdin:
         return iter(self.x)
 
 
-mock_stdin = MockStdin(dirs)
-
-
 def add(x):
     return x + 1
 
 
-def test():
+def test_curry():
+    global args
+    import arguments
+    arguments.init()
+    from arguments import args
     m = map(add)
     assert m([1, 2]) == [2, 3]
     @curry
@@ -66,3 +68,36 @@ def test():
         p(a, b, c)
 
     g(1)(2)
+    return 'pass'
+
+
+def test_dir():
+    import driver
+    cmd = "-", "-test=%s" % dirs, "-d", '-f\t'
+    kept, transformed, reduced, formatted = driver.main(cmd)
+    foo = {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
+    assert kept == foo
+    assert transformed == foo
+    assert reduced == foo
+    assert formatted == '0 ~/Dropbox/scripts/cli\n1 ~/Dropbox/scripts\n2 ~'
+    p('done')
+    return 'pass'
+
+
+def init():
+    global args, mock_stdin
+    from arguments import args
+    mock_stdin = MockStdin(args.test)
+
+
+tests = [test_curry, test_dir]
+
+
+def test():
+    for i, t in enumerate(tests):
+        print(i)
+        print(t())
+
+
+if __name__ == '__main__':
+    test()

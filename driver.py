@@ -1,15 +1,32 @@
-from args import args
+import arguments
 from logger import p
+import mawk
 from mawk import process
-from formatter import use_stdin_raw, use_stdin_py, get_input, write_out, format_output
-from functionmaker import cmds
+import formatter
+import functionmaker
+import test
 
 # Fix for broken pipe error I don't quite eunderstand
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
 
-def main():
+def init(x=None):
+    global args, use_stdin_raw, use_stdin_py, get_input, write_out, format_output, cmds
+    arguments.init(x)
+    from arguments import args
+    p(args)
+    formatter.init()
+    from formatter import use_stdin_raw, use_stdin_py, get_input, write_out, format_output
+    # TODO: need to reimport the functions?
+    functionmaker.init()
+    from functionmaker import cmds
+    mawk.init()
+    test.init()
+
+
+def main(x=None):
+    init(x)
     if use_stdin_raw or use_stdin_py:  # TODO clean this up
         if args.s:
             for ri, raw in enumerate(get_input()):
@@ -26,6 +43,7 @@ def main():
         else:
             raw = get_input()
             if use_stdin_raw:
+                #p('raw', type(raw), repr(raw), d=True)
                 kept, transformed, reduced, formatted = process(raw)
                 write_out(formatted)
                 return kept, transformed, reduced, formatted

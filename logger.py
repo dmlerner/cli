@@ -1,7 +1,7 @@
 import inspect
 import sys
 import pdb
-from args import args
+import arguments
 
 outfile = open('out.txt', 'w')
 
@@ -26,10 +26,7 @@ def trace():
 def p(*x, d=False):
     if d:
         pdb.set_trace()
-    if args.d:
+    if arguments.args.d:
         log = '\n'.join(map(str, x)) + '\n\n'
         sys.stderr.write(log)
         outfile.write(log)
-
-
-p(args)

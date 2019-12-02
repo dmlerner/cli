@@ -41,16 +41,8 @@ def reduce(a, b, c):
 
 
 @curry
-def r(a, b, c):
-    return _reduce(a, b, c)
-
-
-'''
-def listify(f):
-    return lambda *x: list(f(*x))
-map = curry(map)
-filter, map = map(curry, map(listify, (filter, map)))
-'''
+def equal(a, b):
+    return a == b
 
 
 def vector(f):
@@ -76,7 +68,7 @@ def vector(f):
 def flatten(xs):
     if not xs:
         return xs
-    return reduce(type(xs[0]).__add__)(xs)
+    return reduce(type(xs[0]).__add__)(xs, xs[0])
 
 
 @curry
