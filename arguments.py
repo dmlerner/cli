@@ -78,7 +78,7 @@ parser.add_argument('-b', action='store_false')
 parser.add_argument('-s', action='store_true')  # streaming
 # TODO: file out
 
-parser.add_argument('-test', nargs='?')
+parser.add_argument('-test', nargs='?', default='')
 
 
 def handle_escapes(x):

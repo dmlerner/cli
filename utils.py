@@ -45,6 +45,10 @@ def equal(a, b):
     return a == b
 
 
+def const(a):
+    return lambda *args, **kwargs: a
+
+
 def vector(f):
     @wraps(f)
     def vf(*args, **kwargs):
@@ -65,6 +69,11 @@ def vector(f):
     return vf
 
 
+@vector
+def apply(x, f):
+    return f(x)
+
+
 def flatten(xs):
     if not xs:
         return xs
@@ -78,7 +87,7 @@ def compose(fs, y):
 
 @curry
 def check_all(fs, x):
-    return all(map(lambda f: f(x))(fs))
+    return all(map(apply(x), (fs)))
 
 
 @curry
@@ -115,7 +124,7 @@ def dict_k(f, d):
 
 
 @curry
-def vmap(f, d):  # aka list(dict_vmap(f).values())
+def vmap(f, d):
     return map(f)(d.values())
 
 
@@ -168,3 +177,7 @@ def identity(*x):
     if len(x) == 1:
         return x[0]
     return x
+
+
+def splat(f):  # TODO: think about kwargs
+    return lambda *args: f(args)

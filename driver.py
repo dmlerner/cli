@@ -1,5 +1,6 @@
 import arguments
 from logger import p
+import sys
 import mawk
 from mawk import process
 import formatter
@@ -27,9 +28,10 @@ def init(x=None):
 
 def main(x=None):
     init(x)
+    stdin = sys.stdin if not args.test else test.mock_stdin
     if use_stdin_raw or use_stdin_py:  # TODO clean this up
         if args.s:
-            for ri, raw in enumerate(get_input()):
+            for ri, raw in enumerate(get_input(stdin)):
                 if use_stdin_raw:
                     kept, transformed, reduced, formatted = process(raw, ri)
                     write_out(formatted)
@@ -41,9 +43,8 @@ def main(x=None):
                     write_out(formatted)
                     return None, None, None, formatted
         else:
-            raw = get_input()
+            raw = get_input(stdin)
             if use_stdin_raw:
-                #p('raw', type(raw), repr(raw), d=True)
                 kept, transformed, reduced, formatted = process(raw)
                 write_out(formatted)
                 return kept, transformed, reduced, formatted

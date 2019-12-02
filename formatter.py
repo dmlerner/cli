@@ -2,7 +2,6 @@ from logger import p
 import sys
 from utils import dict_kmap, dict_vmap, index_dict, \
     add, split, identity, replace, map, filter, join, dict_v
-import test
 
 
 def parse(raw_records, ri_start=0):
@@ -21,9 +20,8 @@ def field_type(x):
     return eval(args.t)(x) if x is not None else None
 
 
-def get_input():
-    p('get_input, args.test = ', args.test)
-    stdin = sys.stdin if not args.test else test.mock_stdin
+def get_input(stdin):
+    p('get_input, args.test = ', args.test, stdin)
     it = record_iterator(stdin, args.r)
     if args.s:
         return it
@@ -76,7 +74,7 @@ def write_out(x):
         print(x)
 
 
-def out_rank(args):
+def get_out_rank(args):
     out_rank = 2
     if args.r20:
         assert not args.r21 and not args.r10
@@ -92,4 +90,4 @@ def init():
     from arguments import args
     use_stdin_raw = args.c and args.c[0] == '-'
     use_stdin_py = args.c and args.c[0] == '.'
-    out_rank = out_rank(args)
+    out_rank = get_out_rank(args)

@@ -17,7 +17,7 @@ def transform(records):
             for fi in records[ri]:
                 if fi in to_transform[ri]:
                     # Note that fields are transformed before records, for no particularly compelling reason
-                    out[ri][fi] = compose(fts)(out[ri][fi])
+                    out[ri][fi] = reduce(lambda f, ft: ft((fi, f)))(fts, out[ri][fi])
             # By design, this may crash, if rt tries to access something that wasn't kept around
             p('rts, out[ri]', rts, out[ri])
             out[ri] = reduce(lambda r, rt: rt((ri, r)))(rts, out[ri])

@@ -3,6 +3,7 @@
 from utils import curry, vector, map, equal
 from logger import p
 import mawk
+import arguments
 
 dirs = '''\
 0\t~/Dropbox/scripts/cli
@@ -20,10 +21,11 @@ nums = '1,2;3,4;;;;;5,6;7,8;;;'
 
 class MockStdin:
     def __init__(self, x=''):
-        self.x = x
+        p('MockStdin.init, x=', x)
+        self.x = x.split('\n')
 
     def read(self):
-        return self.x
+        return '\n'.join(self.x)
 
     def __iter__(self):
         return iter(self.x)
@@ -84,19 +86,76 @@ def test_dir():
     return 'pass'
 
 
+def test_rp():
+    import driver
+    cmd = "-", "-test=%s" % dirs, "-d", '-f\t', '-rp', '"Dropbox" not in V'
+    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    show(out)
+    assert kept == {2: {0: '2', 1: '~'}}
+    assert transformed == {2: {0: '2', 1: '~'}}
+    assert reduced == {2: {0: '2', 1: '~'}}
+    assert formatted == '2 ~'
+
+
+def test_cmd():
+    import driver
+    cmd = '{1:2}[1]', 'sum(range(100))', '-d'
+    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    show(out)
+    assert formatted == [2, 4950]
+
+
+def test_fp():
+    import driver
+    cmd = "-", "-test=%s" % dirs, "-d", '-f\t', '-fp', '"Dropbox" not in V'
+    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    show(out)
+    assert kept == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
+    assert transformed == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
+    assert reduced == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
+    assert formatted == '0\n1\n2 ~'
+
+
+def test_ft():
+    import driver
+    cmd = "-", "-test=%s" % dirs, "-d", '-f\t', '-ft', 'v*2'
+    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    show(out)
+    assert kept == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
+    assert transformed == {0: {0: '00', 1: '~/Dropbox/scripts/cli~/Dropbox/scripts/cli'},
+                           1: {0: '11', 1: '~/Dropbox/scripts~/Dropbox/scripts'}, 2: {0: '22', 1: '~~'}}
+    assert reduced == {0: {0: '00', 1: '~/Dropbox/scripts/cli~/Dropbox/scripts/cli'},
+                       1: {0: '11', 1: '~/Dropbox/scripts~/Dropbox/scripts'}, 2: {0: '22', 1: '~~'}}
+    assert formatted == '00 ~/Dropbox/scripts/cli~/Dropbox/scripts/cli\n11 ~/Dropbox/scripts~/Dropbox/scripts\n22 ~~'
+
+
 def init():
     global args, mock_stdin
     from arguments import args
     mock_stdin = MockStdin(args.test)
 
 
-tests = [test_curry, test_dir]
+def show(out):
+    kept, transformed, reduced, formatted = out
+    p('kept', kept, 'transformed', transformed, 'reduced', reduced, 'formatted', formatted)
+
+
+def write_asserts(out):
+    kept, transformed, reduced, formatted = out
+    for k, v in zip('kept transformed reduced formatted'.split(), out):
+        print('\tassert %s == %s' % (k, repr(v)))
+
+
+tests = [test_curry, test_dir, test_rp, test_cmd, test_fp, test_ft]
+#tests = tests[-1:]
 
 
 def test():
+    arguments.init('-d')
     for i, t in enumerate(tests):
-        print(i)
-        print(t())
+        p(i)
+        t()
+        p('..............................')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 import re
 from logger import p
-from utils import vector, replace, map, compose, filter, flatten, identity
+from utils import vector, replace, map, compose, filter, flatten, identity, apply, const
 
 
 def predicate_maker(mode, arg, vals):
@@ -37,7 +37,7 @@ def sub_all(source, *subs):
 
 
 @vector
-def make_subs(prefix):
+def make_subs(prefix): 
     range = r'x\.(Q+),(Q+)', r'x[x.index("\1"): x.index("\2")+1]'  # x.account_name,amount
     numeric_range = r'x([\d]+),([\d]+)', r'x[int(\1):int(\2)+1]'  # x7,9
     numeric_range_start = r'x,([\d]+)', r'x[:int(\1)+1]'  # x,9
@@ -163,9 +163,8 @@ def init():
 
     global cmds
     if use_stdin_raw:
-        cmds = map(parse_command2)(args.c[1:])  # command1 in streaming case?
+        cmds = compose(map(parse_command2)(args.c[1:]))  # command1 in streaming case?
     elif use_stdin_py:
-        cmds = map(parse_command0)(args.c[1:])
+        cmds = compose(map(parse_command0)(args.c[1:]))
     else:
-        cmds = map(parse_command)(args.c)  # compose probably doens't work here, zero args...
-    cmds = compose(cmds)
+        cmds = const(apply(None)(map(parse_command)(args.c)))
