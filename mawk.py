@@ -1,10 +1,12 @@
 #!/usr/bin/python3
-from utils import reduce, dict_vmap, dict_multi_filter, compose
+from utils import reduce, dict_vmap, dict_multi_filter, compose, apply
 from formatter import parse, format_output
 from logger import p
+import pdb
 
 
 def filter_records(records, fps, rps):
+    p('filter_records', records, fps, rps)
     return dict_vmap(dict_multi_filter(fps))(dict_multi_filter(rps)(records))
 
 
@@ -12,15 +14,17 @@ def transform(records):
     p('records', records)
     to_transform = filter_records(records, ftps, rtps)  # TODO: reduce storage? only need keys...
     out = dict_vmap(lambda v: v.copy())(records)
+    # TODO: use dict.update to avoid loops?
+    # TODO: skip when there are no rts/fts?
     for ri in records:
         if ri in to_transform:
             for fi in records[ri]:
                 if fi in to_transform[ri]:
                     # Note that fields are transformed before records, for no particularly compelling reason
-                    out[ri][fi] = reduce(lambda f, ft: ft((fi, f)))(fts, out[ri][fi])
+                    out[ri][fi] = compose(map(apply(fi), fts))(out[ri][fi])
             # By design, this may crash, if rt tries to access something that wasn't kept around
             p('rts, out[ri]', rts, out[ri])
-            out[ri] = reduce(lambda r, rt: rt((ri, r)))(rts, out[ri])
+            out[ri] = compose(map(apply(ri), rts))(out[ri])
     p('cmds, out', cmds, out)
     out = cmds(out)
     return out

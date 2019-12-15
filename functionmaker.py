@@ -1,6 +1,7 @@
 import re
 from logger import p
 from utils import vector, replace, map, compose, filter, flatten, identity, apply, const
+from utils import curry  # used in eval
 
 
 def predicate_maker(mode, arg, vals):
@@ -37,7 +38,7 @@ def sub_all(source, *subs):
 
 
 @vector
-def make_subs(prefix): 
+def make_subs(prefix):
     range = r'x\.(Q+),(Q+)', r'x[x.index("\1"): x.index("\2")+1]'  # x.account_name,amount
     numeric_range = r'x([\d]+),([\d]+)', r'x[int(\1):int(\2)+1]'  # x7,9
     numeric_range_start = r'x,([\d]+)', r'x[:int(\1)+1]'  # x,9
@@ -71,9 +72,9 @@ def parse_command0(cmd):
     if not cmd:
         return identity
     template = '''\
-def f(k_v):
-    p('parse_command0', k_v),
-    k, v = k_v
+@curry
+def f(k, v):
+    p('parse_command0', k, v),
     K = str(k)
     V = str(v)
     ret = %s
@@ -89,12 +90,9 @@ def parse_command1(cmd):
     if not cmd:
         return identity
     template = '''\
-def f(di_d):
-    p('parse_command1', di_d),
-    if type(di_d) is dict:
-        #assert False
-        di_d = (None, di_d)
-    i, d = di_d
+@curry
+def f(i, d):
+    p('parse_command1', i, d),
     k = list(d.keys())
     K = ''.join(map(str)(k)) # TODO use args.f or similar
     v = list(d.values())
@@ -116,7 +114,7 @@ def parse_command2(cmd):
         return lambda: None
     template = '''\
 def f(d):
-    p('parse_command2', d),
+    p('parse_command2', d, type(d)),
     rk = list(d.keys())
     rK  = ''.join(map(str)(rk))
     rv = list(d.values())
@@ -153,7 +151,7 @@ def init():
 
     global rps, rtps, rts
     rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-    rtps = map(parse_command1)(args.rtp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
+    rtps = map(parse_command1)(args.rtp) + make_predicates(args.rti, args.rtix, args.rtv, args.rtvx)
     rts = map(parse_command1)(args.rt)
 
     global r20, r21, r10

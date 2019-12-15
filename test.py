@@ -3,6 +3,7 @@
 from utils import curry, vector, map, equal
 from logger import p
 import mawk
+import pdb
 import arguments
 
 dirs = '''\
@@ -76,7 +77,8 @@ def test_curry():
 def test_dir():
     import driver
     cmd = "-", "-test=%s" % dirs, "-d", '-f\t'
-    kept, transformed, reduced, formatted = driver.main(cmd)
+    out = kept, transformed, reduced, formatted = driver.main(cmd)
+    show(out)
     foo = {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert kept == foo
     assert transformed == foo
@@ -137,7 +139,7 @@ def init():
 
 def show(out):
     kept, transformed, reduced, formatted = out
-    p('kept', kept, 'transformed', transformed, 'reduced', reduced, 'formatted', formatted)
+    p('show', 'kept', kept, 'transformed', transformed, 'reduced', reduced, 'formatted', formatted)
 
 
 def write_asserts(out):
@@ -148,6 +150,7 @@ def write_asserts(out):
 
 tests = [test_curry, test_dir, test_rp, test_cmd, test_fp, test_ft]
 #tests = tests[-1:]
+#tests = [test_rp]
 
 
 def test():

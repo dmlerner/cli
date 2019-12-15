@@ -24,9 +24,9 @@ def trace():
 
 
 def p(*x, d=False):
+    log = '\n'.join(map(str, x)) + '\n\n'
+    if d or arguments.args.d:
+        sys.stderr.write(log)
+    outfile.write(log)
     if d:
         pdb.set_trace()
-    if arguments.args.d:
-        log = '\n'.join(map(str, x)) + '\n\n'
-        sys.stderr.write(log)
-        outfile.write(log)

@@ -1,9 +1,12 @@
 import inspect
 from functools import wraps, partial
 from functools import reduce as _reduce
+from functools import reduce  # TODO: wtf
+import pdb
 
 
 def satisfied(f, *args, **kwargs):
+    # TODO: if too many args, fail
     try:
         sig = inspect.signature(f)
         sig.bind(*args, **kwargs)
@@ -71,7 +74,17 @@ def vector(f):
 
 @vector
 def apply(x, f):
+    # pdb.set_trace()
     return f(x)
+
+
+@curry
+def flip(f, a, b):
+    return f(b, a)
+
+
+def rotate(f):
+    return lambda *args, **kwargs: f(args[-1], *args[:-1], **kwargs)
 
 
 def flatten(xs):
@@ -82,12 +95,12 @@ def flatten(xs):
 
 @curry
 def compose(fs, y):
-    return reduce(lambda y, f: f(y))(fs, y)
+    return reduce(apply, fs, y)
 
 
 @curry
 def check_all(fs, x):
-    return all(map(apply(x), (fs)))
+    return all(map(apply(x), fs))
 
 
 @curry
@@ -97,7 +110,8 @@ def multi_filter(fs, xs):
 
 @curry
 def dict_multi_filter(fs, d):
-    return dict(multi_filter(fs)(d.items()))
+    # this broke because we're passing fs:: [f(k, v)], but multi_filter expects fs:: [f(v)]
+    return dict(multi_filter(map(splat, fs))(d.items()))
 
 
 @curry
@@ -105,7 +119,8 @@ def dict_map(f, d):
     return dict(map(f)(d.items()))
 
 
-def dict_vmap(f):  # why do I have these as one argument tuple functions? something about parse command...
+def dict_vmap(f):
+    '''why take one arg? answer: because it's convenient to take an element of d.items'''
     return dict_map(lambda kv: (kv[0], f(kv[1])))
 
 
@@ -179,5 +194,9 @@ def identity(*x):
     return x
 
 
-def splat(f):  # TODO: think about kwargs
+def unsplat(f):  # TODO: think about kwargs
     return lambda *args: f(args)
+
+
+def splat(f):
+    return lambda x: f(*x)
