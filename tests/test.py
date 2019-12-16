@@ -18,6 +18,22 @@ dicts = '''\
 nums = '1,2;3,4;;;;;5,6;7,8;;;'
 
 
+def init(test):
+    global mock_stdin
+    mock_stdin = MockStdin(test)
+
+
+def show(out):
+    kept, transformed, reduced, formatted = out
+    p('show', 'kept', kept, 'transformed', transformed, 'reduced', reduced, 'formatted', formatted)
+
+
+def write_asserts(out):
+    kept, transformed, reduced, formatted = out
+    for k, v in zip('kept transformed reduced formatted'.split(), out):
+        print('\tassert %s == %s' % (k, repr(v)))
+
+
 class MockStdin:
     def __init__(self, x=''):
         #p('MockStdin.init, x=', x)
@@ -133,23 +149,31 @@ def tst_ft():
     assert formatted == '00 ~/Dropbox/scripts/cli~/Dropbox/scripts/cli\n11 ~/Dropbox/scripts~/Dropbox/scripts\n22 ~~'
 
 
-def init(test):
-    global mock_stdin
-    mock_stdin = MockStdin(test)
+def tst_fi():
+    import mawk
+    init(dirs)
+    cmd = "-", "-d", '-f\t', '-fi', *'1 20 30'.split()
+    kept, transformed, reduced, formatted = out = mawk.__main__.main(cmd, mock_stdin)
+    show(out)
+    assert kept == {0: {1: '~/Dropbox/scripts/cli'}, 1: {1: '~/Dropbox/scripts'}, 2: {1: '~'}}
+    assert transformed == {0: {1: '~/Dropbox/scripts/cli'}, 1: {1: '~/Dropbox/scripts'}, 2: {1: '~'}}
+    assert reduced == {0: {1: '~/Dropbox/scripts/cli'}, 1: {1: '~/Dropbox/scripts'}, 2: {1: '~'}}
+    assert formatted == '~/Dropbox/scripts/cli\n~/Dropbox/scripts\n~'
 
 
-def show(out):
-    kept, transformed, reduced, formatted = out
-    p('show', 'kept', kept, 'transformed', transformed, 'reduced', reduced, 'formatted', formatted)
+def tst_ri():
+    import mawk
+    init(dirs)
+    cmd = "-", "-d", '-f\t', '-ri', *'1 20 30'.split()
+    kept, transformed, reduced, formatted = out = mawk.__main__.main(cmd, mock_stdin)
+    show(out)
+    assert kept == {1: {0: '1', 1: '~/Dropbox/scripts'}}
+    assert transformed == {1: {0: '1', 1: '~/Dropbox/scripts'}}
+    assert reduced == {1: {0: '1', 1: '~/Dropbox/scripts'}}
+    assert formatted == '1 ~/Dropbox/scripts'
 
 
-def write_asserts(out):
-    kept, transformed, reduced, formatted = out
-    for k, v in zip('kept transformed reduced formatted'.split(), out):
-        print('\tassert %s == %s' % (k, repr(v)))
-
-
-tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft]
+tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft, tst_fi, tst_ri]
 #tests = tests[-1:]
 #tests = [tst_rp]
 

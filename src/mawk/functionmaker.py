@@ -11,7 +11,7 @@ def predicate_maker(mode, arg, vals):
         return None
     vals = set(vals)
     p(mode, arg, vals)
-    return lambda xi_x: (xi_x[arg] in vals) == (mode == 'w')
+    return lambda k, v: ([k, v][arg] in vals) == (mode == 'w')
 
 
 def make_predicates(i, ix, v, vx):
