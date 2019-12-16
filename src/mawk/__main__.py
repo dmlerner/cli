@@ -5,10 +5,9 @@ from .mawk import process
 from . import formatter
 from . import functionmaker
 from . import mawk
-#import test
 
 
-# Fix for broken pipe error I don't quite eunderstand
+# Fix for broken pipe error I don't quite understand
 from signal import signal, SIGPIPE, SIG_DFL
 signal(SIGPIPE, SIG_DFL)
 
@@ -24,7 +23,6 @@ def init(raw_args=None):
     functionmaker.init()
     from .functionmaker import cmds
     mawk.init()
-    # test.init()
 
 
 def main(raw_args=None, stdin=None):

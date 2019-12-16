@@ -1,2 +1,2 @@
-from . import arguments, formatter, functionmaker, logger, mawk, utils
-from .__main__ import main 
+from . import arguments, formatter, functionmaker, logger, mawk, utils, __main__
+#from .__main__ import main 

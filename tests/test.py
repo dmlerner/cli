@@ -34,7 +34,7 @@ def add(x):
     return x + 1
 
 
-def test_curry():
+def tst_curry():
     global args
     from mawk import arguments
     arguments.init('-d')
@@ -72,11 +72,11 @@ def test_curry():
     return 'pass'
 
 
-def test_dir():
+def tst_dir():
     import mawk
     init(dirs)
     cmd = "-", "-d", '-f\t'
-    out = kept, transformed, reduced, formatted = mawk.main(cmd, mock_stdin)
+    out = kept, transformed, reduced, formatted = mawk.__main__.main(cmd, mock_stdin)
     show(out)
     foo = {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert kept == foo
@@ -87,11 +87,11 @@ def test_dir():
     return 'pass'
 
 
-def test_rp():
+def tst_rp():
     import mawk  # TODO: remove?
     init(dirs)
     cmd = "-", "-d", '-f\t', '-rp', '"Dropbox" not in V'
-    kept, transformed, reduced, formatted = out = mawk.main(cmd, mock_stdin)
+    kept, transformed, reduced, formatted = out = mawk.__main__.main(cmd, mock_stdin)
     show(out)
     assert kept == {2: {0: '2', 1: '~'}}
     assert transformed == {2: {0: '2', 1: '~'}}
@@ -99,19 +99,19 @@ def test_rp():
     assert formatted == '2 ~'
 
 
-def test_cmd():
+def tst_cmd():
     import mawk
     cmd = '{1:2}[1]', 'sum(range(100))', '-d'
-    kept, transformed, reduced, formatted = out = mawk.main(cmd)
+    kept, transformed, reduced, formatted = out = mawk.__main__.main(cmd)
     show(out)
     assert formatted == [2, 4950]
 
 
-def test_fp():
+def tst_fp():
     import mawk
     init(dirs)
     cmd = "-", "-d", '-f\t', '-fp', '"Dropbox" not in V'
-    kept, transformed, reduced, formatted = out = mawk.main(cmd, mock_stdin)
+    kept, transformed, reduced, formatted = out = mawk.__main__.main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
     assert transformed == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
@@ -119,11 +119,11 @@ def test_fp():
     assert formatted == '0\n1\n2 ~'
 
 
-def test_ft():
+def tst_ft():
     import mawk
     init(dirs)
     cmd = "-", "-d", '-f\t', '-ft', 'v*2'
-    kept, transformed, reduced, formatted = out = mawk.main(cmd, mock_stdin)
+    kept, transformed, reduced, formatted = out = mawk.__main__.main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert transformed == {0: {0: '00', 1: '~/Dropbox/scripts/cli~/Dropbox/scripts/cli'},
@@ -149,9 +149,9 @@ def write_asserts(out):
         print('\tassert %s == %s' % (k, repr(v)))
 
 
-tests = [test_curry, test_dir, test_rp, test_cmd, test_fp, test_ft]
+tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft]
 #tests = tests[-1:]
-#tests = [test_rp]
+#tests = [tst_rp]
 
 
 def test():
@@ -164,6 +164,5 @@ def test():
 
 if __name__ == '__main__':
     print('test.main')
-    init()
     test()
     print('done')
