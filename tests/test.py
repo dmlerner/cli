@@ -1,10 +1,8 @@
 #!/usr/bin/python3
-
-from utils import curry, vector, map, equal
-from logger import p
-import mawk
+from mawk.utils import curry, vector, map, equal
+from mawk.logger import p
 import pdb
-import arguments
+from mawk import arguments
 
 dirs = '''\
 0\t~/Dropbox/scripts/cli
@@ -22,7 +20,7 @@ nums = '1,2;3,4;;;;;5,6;7,8;;;'
 
 class MockStdin:
     def __init__(self, x=''):
-        p('MockStdin.init, x=', x)
+        #p('MockStdin.init, x=', x)
         self.x = x.split('\n')
 
     def read(self):
@@ -38,9 +36,9 @@ def add(x):
 
 def test_curry():
     global args
-    import arguments
-    arguments.init()
-    from arguments import args
+    from mawk import arguments
+    arguments.init('-d')
+    from mawk.arguments import args
     m = map(add)
     assert m([1, 2]) == [2, 3]
     @curry
@@ -75,9 +73,10 @@ def test_curry():
 
 
 def test_dir():
-    import driver
-    cmd = "-", "-test=%s" % dirs, "-d", '-f\t'
-    out = kept, transformed, reduced, formatted = driver.main(cmd)
+    import mawk
+    init(dirs)
+    cmd = "-", "-d", '-f\t'
+    out = kept, transformed, reduced, formatted = mawk.main(cmd, mock_stdin)
     show(out)
     foo = {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert kept == foo
@@ -89,9 +88,10 @@ def test_dir():
 
 
 def test_rp():
-    import driver
-    cmd = "-", "-test=%s" % dirs, "-d", '-f\t', '-rp', '"Dropbox" not in V'
-    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    import mawk  # TODO: remove?
+    init(dirs)
+    cmd = "-", "-d", '-f\t', '-rp', '"Dropbox" not in V'
+    kept, transformed, reduced, formatted = out = mawk.main(cmd, mock_stdin)
     show(out)
     assert kept == {2: {0: '2', 1: '~'}}
     assert transformed == {2: {0: '2', 1: '~'}}
@@ -100,17 +100,18 @@ def test_rp():
 
 
 def test_cmd():
-    import driver
+    import mawk
     cmd = '{1:2}[1]', 'sum(range(100))', '-d'
-    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    kept, transformed, reduced, formatted = out = mawk.main(cmd)
     show(out)
     assert formatted == [2, 4950]
 
 
 def test_fp():
-    import driver
-    cmd = "-", "-test=%s" % dirs, "-d", '-f\t', '-fp', '"Dropbox" not in V'
-    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    import mawk
+    init(dirs)
+    cmd = "-", "-d", '-f\t', '-fp', '"Dropbox" not in V'
+    kept, transformed, reduced, formatted = out = mawk.main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
     assert transformed == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
@@ -119,9 +120,10 @@ def test_fp():
 
 
 def test_ft():
-    import driver
-    cmd = "-", "-test=%s" % dirs, "-d", '-f\t', '-ft', 'v*2'
-    kept, transformed, reduced, formatted = out = driver.main(cmd)
+    import mawk
+    init(dirs)
+    cmd = "-", "-d", '-f\t', '-ft', 'v*2'
+    kept, transformed, reduced, formatted = out = mawk.main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert transformed == {0: {0: '00', 1: '~/Dropbox/scripts/cli~/Dropbox/scripts/cli'},
@@ -131,10 +133,9 @@ def test_ft():
     assert formatted == '00 ~/Dropbox/scripts/cli~/Dropbox/scripts/cli\n11 ~/Dropbox/scripts~/Dropbox/scripts\n22 ~~'
 
 
-def init():
-    global args, mock_stdin
-    from arguments import args
-    mock_stdin = MockStdin(args.test)
+def init(test):
+    global mock_stdin
+    mock_stdin = MockStdin(test)
 
 
 def show(out):
@@ -162,4 +163,7 @@ def test():
 
 
 if __name__ == '__main__':
+    print('test.main')
+    init()
     test()
+    print('done')

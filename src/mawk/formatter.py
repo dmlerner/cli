@@ -1,6 +1,5 @@
-from logger import p
-import sys
-from utils import dict_kmap, dict_vmap, index_dict, \
+from .logger import p
+from .utils import dict_kmap, dict_vmap, index_dict, \
     add, split, identity, replace, map, filter, join, dict_v
 
 
@@ -87,7 +86,7 @@ def get_out_rank(args):
 
 def init():
     global use_stdin_raw, use_stdin_py, out_rank, args
-    from arguments import args
+    from .arguments import args
     use_stdin_raw = args.c and args.c[0] == '-'
     use_stdin_py = args.c and args.c[0] == '.'
     out_rank = get_out_rank(args)

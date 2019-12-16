@@ -1,7 +1,7 @@
 import inspect
 import sys
 import pdb
-import arguments
+from . import arguments
 
 outfile = open('out.txt', 'w')
 

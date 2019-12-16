@@ -1,3 +1,6 @@
 __pycache__/*
 out.txt
 *.pyc
+.tox/*
+.coverage
+src/mawk.egg-info/*

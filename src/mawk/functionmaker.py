@@ -1,7 +1,7 @@
 import re
-from logger import p
-from utils import vector, replace, map, compose, filter, flatten, identity, apply, const
-from utils import curry  # used in eval
+from .logger import p
+from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const
+from .utils import curry  # used in eval
 
 
 def predicate_maker(mode, arg, vals):
@@ -140,9 +140,9 @@ def f(d):
 
 def init():
     global use_stdin_raw, use_stdin_py
-    from formatter import use_stdin_raw, use_stdin_py
+    from .formatter import use_stdin_raw, use_stdin_py
     global args
-    from arguments import args
+    from .arguments import args
 
     global fps, ftps, fts
     fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)

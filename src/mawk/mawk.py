@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-from utils import reduce, dict_vmap, dict_multi_filter, compose, apply
-from formatter import parse, format_output
-from logger import p
+from .utils import reduce, dict_vmap, dict_multi_filter, compose, apply
+from .formatter import parse, format_output
+from .logger import p
 import pdb
 
 
@@ -64,5 +64,5 @@ def process(records, ri_start=0):
 
 def init():
     global ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps, args
-    from functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
-    from arguments import args
+    from .functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
+    from .arguments import args
