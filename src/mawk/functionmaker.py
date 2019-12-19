@@ -1,3 +1,6 @@
+print('functionmaker')
+import arguments
+from .formatter import use_stdin_raw, use_stdin_py
 import re
 from .logger import p
 from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const
@@ -94,9 +97,9 @@ def parse_command1(cmd):
 def f(i, d):
     p('parse_command1', i, d),
     k = list(d.keys())
-    K = ''.join(map(str)(k)) # TODO use args.f or similar
+    K = ''.join(map(str)(k)) # TODO use arguments.args.f or similar
     v = list(d.values())
-    V = ''.join(map(str)(v)) # TODO use args.f or similar
+    V = ''.join(map(str)(v)) # TODO use arguments.args.f or similar
     ret = %s
     p('k, v, ret', k, v, ret)
     return ret'''
@@ -138,31 +141,25 @@ def f(d):
     return locals()['f']
 
 
-def init():
-    global use_stdin_raw, use_stdin_py
-    from .formatter import use_stdin_raw, use_stdin_py
-    global args
-    from .arguments import args
+fps = map(parse_command0)(arguments.args.fp) + make_predicates(arguments.args.fi,
+                                                               arguments.args.fix, arguments.args.fv, arguments.args.fvx)
+ftps = map(parse_command0)(arguments.args.ftp) + make_predicates(arguments.args.fti,
+                                                                 arguments.args.ftix, arguments.args.ftv, arguments.args.ftvx)
+fts = map(parse_command0)(arguments.args.ft)
 
-    global fps, ftps, fts
-    fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
-    ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
-    fts = map(parse_command0)(args.ft)
+rps = map(parse_command1)(arguments.args.rp) + make_predicates(arguments.args.ri,
+                                                               arguments.args.rix, arguments.args.rv, arguments.args.rvx)
+rtps = map(parse_command1)(arguments.args.rtp) + make_predicates(arguments.args.rti,
+                                                                 arguments.args.rtix, arguments.args.rtv, arguments.args.rtvx)
+rts = map(parse_command1)(arguments.args.rt)
 
-    global rps, rtps, rts
-    rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-    rtps = map(parse_command1)(args.rtp) + make_predicates(args.rti, args.rtix, args.rtv, args.rtvx)
-    rts = map(parse_command1)(args.rt)
+r20 = parse_command2(arguments.args.r20)
+r21 = parse_command2(arguments.args.r21)
+r10 = map(parse_command1)(arguments.args.r10)
 
-    global r20, r21, r10
-    r20 = parse_command2(args.r20)
-    r21 = parse_command2(args.r21)
-    r10 = map(parse_command1)(args.r10)
-
-    global cmds
-    if use_stdin_raw:
-        cmds = compose(map(parse_command2)(args.c[1:]))  # command1 in streaming case?
-    elif use_stdin_py:
-        cmds = compose(map(parse_command0)(args.c[1:]))
-    else:
-        cmds = const(apply(None)(map(parse_command)(args.c)))
+if use_stdin_raw:
+    cmds = compose(map(parse_command2)(arguments.args.c[1:]))  # command1 in streaming case?
+elif use_stdin_py:
+    cmds = compose(map(parse_command0)(arguments.args.c[1:]))
+else:
+    cmds = const(apply(None)(map(parse_command)(arguments.args.c)))
