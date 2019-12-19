@@ -1,10 +1,10 @@
-print('functionmaker')
-import arguments
-from .formatter import use_stdin_raw, use_stdin_py
-import re
-from .logger import p
-from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const
 from .utils import curry  # used in eval
+from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const
+from .logger import p
+import re
+from .formatter import use_stdin_raw, use_stdin_py
+from . import arguments
+print('functionmaker')
 
 
 def predicate_maker(mode, arg, vals):

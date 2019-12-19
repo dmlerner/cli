@@ -6,7 +6,7 @@ from . import formatter
 from .formatter import parse, format_output
 from .formatter import use_stdin_raw, use_stdin_py, get_input, write_out, format_output
 from .logger import p
-import arguments
+from . import arguments
 import sys
 import pdb
 

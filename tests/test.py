@@ -1,10 +1,10 @@
 #!/usr/bin/python3
+from mawk import arguments, reload
 import pdb
 from mawk.mawk import main
 from mawk.logger import p
 from mawk.utils import curry, vector, map, equal
 print('test')
-from mawk import arguments, reload
 
 dirs = '''\
 0\t~/Dropbox/scripts/cli
@@ -20,10 +20,10 @@ dicts = '''\
 nums = '1,2;3,4;;;;;5,6;7,8;;;'
 
 
-def init(cmd, test=''):
+def init(cmd=None, test=''):
     global mock_stdin
     mock_stdin = MockStdin(test)
-    arguments.init(cmd)
+    arguments.init(cmd or ('-d',))
     reload()
 
 
@@ -56,7 +56,7 @@ def add(x):
 
 def tst_curry():
     #from mawk import arguments
-    arguments.init('-d')
+    init()
     m = map(add)
     assert m([1, 2]) == [2, 3]
     @curry
@@ -175,7 +175,7 @@ tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft, tst_fi, tst_ri]
 
 
 def test():
-    arguments.init('-d')
+    init()
     for i, t in enumerate(tests):
         print('running test:', i, t)
         p(i)

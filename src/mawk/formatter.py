@@ -1,8 +1,8 @@
-print('formatter')
-import arguments
-from .logger import p
 from .utils import dict_kmap, dict_vmap, index_dict, \
     add, split, identity, replace, map, filter, join, dict_v
+from .logger import p
+from . import arguments
+print('formatter')
 
 
 def parse(raw_records, ri_start=0):
