@@ -2,6 +2,7 @@ import inspect
 from functools import wraps, partial
 from functools import reduce as _reduce
 import pdb
+import re
 
 
 def satisfied(f, *args, **kwargs):
@@ -199,3 +200,17 @@ def unsplat(f):  # TODO: think about kwargs
 
 def splat(f):
     return lambda x: f(*x)
+
+@curry
+def find(pattern, string):
+        found = re.findall(pattern, string)  # find all matches anywhere, consuming l->r
+        if not found:
+            return
+        if len(found) == 1:
+            return found[0]
+        return found
+
+@curry
+def sub(pattern, repl, string):
+	repl = re.sub(r'\$(.)', r'\\g<\g<1>>', repl) # use $1 instead of \g<1>
+	return re.sub(pattern, repl, string)

@@ -1,8 +1,33 @@
 import re
 from .logger import p
-from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const
+from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const, sub
 from .utils import curry  # used in eval
+from .utils import find # used in make_regex_match_function_string
 
+def make_regex_function_string(x):
+    '''
+    k&foo&
+    k&foo(.ar)&
+    k&foo&bar baz& stuff
+    '''
+    p('make_regex_match_function_string', x)
+    if x.count('&') == 2: # TODO: what if it has multiple regexes? eg k&foo& or k&bar&
+        return make_regex_match_function_string(x)
+    if x.count('&') == 3:
+        return make_regex_sub_function_string(x)
+    assert False
+
+def make_regex_match_function_string(x):
+    '''
+    'blah blah k|foo stuff asdf'
+    ->
+    blah blah find('foo', 'k') stuff asdf
+    '''
+    # TODO: allow not quoting the pattern?
+    return sub(r'([^\s&]+)&([^&]+)&', 'find($2,$1)', x)
+
+def make_regex_sub_function_string(x):
+    return sub(r'([^\s&]+)&([^&]+)&([^&]*)&', 'sub($2,$3,$1)', x)
 
 def predicate_maker(mode, arg, vals):
     assert mode in 'wb'
@@ -80,9 +105,14 @@ def f(k, v):
     ret = %s
     p('ret', ret)
     return ret'''
-    func = template % cmd
-    p(func)
-    exec(compile(func, '<string>', 'exec'))
+    return build(template, cmd)
+
+def build(template, cmd):
+    function_text = template % cmd
+    assert 'def f(' in function_text
+    function_text = make_regex_function_string(function_text)
+    p(function_text)
+    exec(compile(function_text, '<string>', 'exec'))
     return locals()['f']
 
 
@@ -103,10 +133,8 @@ def f(i, d):
     # TODO: if foo like bar, ie any(bar in f for f in foo)
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
-    func = template % sub_all(cmd, flatten(make_subs(['k', 'K', 'v', 'V'])))
-    p(func)
-    exec(compile(func, '<string>', 'exec'))
-    return locals()['f']
+    cmd = sub_all(cmd, flatten(make_subs(['k', 'K', 'v', 'V'])))
+    return build(template, cmd)
 
 
 def parse_command2(cmd):
@@ -132,11 +160,8 @@ def f(d):
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
 
-    func = template % sub_all(cmd, make_subs('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
-    p(func)
-    exec(compile(func, '<string>', 'exec'))
-    return locals()['f']
-
+    cmd = sub_all(cmd, make_subs('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
+    return build(tmeplate, cmd)
 
 def init():
     global use_stdin_raw, use_stdin_py
