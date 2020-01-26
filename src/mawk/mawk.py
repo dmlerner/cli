@@ -1,7 +1,13 @@
 #!/usr/bin/python3
+print('mawk')
 from .utils import reduce, dict_vmap, dict_multi_filter, compose, apply
+from .functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
+from . import formatter
 from .formatter import parse, format_output
+from .formatter import use_stdin_raw, use_stdin_py, get_input, write_out, format_output
 from .logger import p
+from . import arguments
+import sys
 import pdb
 
 
@@ -32,17 +38,18 @@ def transform(records):
 
 def do_reduce(rs):
     p('do_reduce', rs)
-    if args.r20:
+    if arguments.args.r20:
         p('r20', rs)
         return r20(rs)
-    if args.r21:
+    if arguments.args.r21:
         p('r21', rs)
         rs = r21(rs)
-        if args.r10:
+        if arguments.args.r10:
             p('r10', rs)
             rs = r10(rs)
-    elif args.r10:
+    elif arguments.args.r10:
         p('map r10', rs, r10)
+        #pdb.set_trace()
         rs = dict_vmap(r10[0])(rs)
         if len(r10) == 2:
             rs = r10[1](rs)
@@ -62,7 +69,37 @@ def process(records, ri_start=0):
     return kept, transformed, reduced, formatted
 
 
-def init():
-    global ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps, args
-    from .functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
-    from .arguments import args
+def main(raw_args=None, stdin=None):
+    print('mawk.main', raw_args, arguments.args, stdin and stdin.x)
+    if raw_args:
+        arguments.init(raw_args)
+    stdin = stdin or sys.stdin
+    if formatter.use_stdin_raw or formatter.use_stdin_py:  # TODO clean this up
+        if arguments.args.s:
+            for ri, raw in enumerate(get_input(stdin)):
+                if use_stdin_raw:
+                    kept, transformed, reduced, formatted = process(raw, ri)
+                    write_out(formatted)
+                    return kept, transformed, reduced, formatted
+                else:  # use_stdin_py
+                    out = cmds((ri, eval(raw)))
+                    p('out', out)
+                    formatted = format_output(out)
+                    write_out(formatted)
+                    return None, None, None, formatted
+        else:
+            raw = get_input(stdin)
+            if use_stdin_raw:
+                kept, transformed, reduced, formatted = process(raw)
+                write_out(formatted)
+                return kept, transformed, reduced, formatted
+            else:  # use_stdin_py
+                out = cmds((None, eval(raw)))
+                p('out', out)
+                formatted = format_output(out)
+                write_out(formatted)
+                return None, None, None, formatted
+    else:
+        out = cmds(None)
+        write_out(out)  # TODO is it going to be a problem that I'm passing a dummy arugment?
+        return None, None, None, out

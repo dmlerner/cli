@@ -1,6 +1,8 @@
-from .logger import p
 from .utils import dict_kmap, dict_vmap, index_dict, \
     add, split, identity, replace, map, filter, join, dict_v
+from .logger import p
+from . import arguments
+print('formatter')
 
 
 def parse(raw_records, ri_start=0):
@@ -8,27 +10,27 @@ def parse(raw_records, ri_start=0):
     records = dict_vmap(index_dict)(
         dict_kmap(add(ri_start))(
             index_dict(map(map(field_type))(
-                map(split(args.f, args.fx, args.fc))(
+                map(split(arguments.args.f, arguments.args.fx, arguments.args.fc))(
                     filter(identity)(
-                        split(args.r, args.rx, args.rc, raw_records.strip())
+                        split(arguments.args.r, arguments.args.rx, arguments.args.rc, raw_records.strip())
                     ))))))
     return records
 
 
 def field_type(x):
-    return eval(args.t)(x) if x is not None else None
+    return eval(arguments.args.t)(x) if x is not None else None
 
 
 def get_input(stdin):
-    p('get_input, args.test = ', args.test, stdin)
-    it = record_iterator(stdin, args.r)
-    if args.s:
+    p('get_input, arguments.args.test = ', arguments.args.test, stdin)
+    it = record_iterator(stdin, arguments.args.r)
+    if arguments.args.s:
         return it
     return stdin.read()
     x = list(it)
     p(x)
-    return args.r.join(x)
-    #return args.r.join(list(it))
+    return arguments.args.r.join(x)
+    # return arguments.args.r.join(list(it))
 
 
 def record_iterator(x, delim):
@@ -47,21 +49,21 @@ def record_iterator(x, delim):
 
 def format_output(reduced):
     p(reduced)
-    if args.p:
+    if arguments.args.p:
         return repr(reduced)
     try:
         if out_rank == 0:
             return str(reduced)
         if out_rank == 2:
-            if not args.fx:
-                reduced = dict_vmap(dict_vmap(replace(args.f, '')))(reduced)
+            if not arguments.args.fx:
+                reduced = dict_vmap(dict_vmap(replace(arguments.args.f, '')))(reduced)
                 p(reduced)
-            reduced = dict_vmap(dict_v(join(args.F)))(reduced)
+            reduced = dict_vmap(dict_v(join(arguments.args.F)))(reduced)
             p(reduced)
-        if not args.rx:
-            reduced = dict_vmap(replace(args.r, ''))(reduced)
+        if not arguments.args.rx:
+            reduced = dict_vmap(replace(arguments.args.r, ''))(reduced)
             p(reduced)
-        return dict_v(join(args.R))(reduced)
+        return dict_v(join(arguments.args.R))(reduced)
     except BaseException:
         p('format_output error')
         return str(reduced)
@@ -75,18 +77,16 @@ def write_out(x):
 
 def get_out_rank(args):
     out_rank = 2
-    if args.r20:
-        assert not args.r21 and not args.r10
+    if arguments.args.r20:
+        assert not arguments.args.r21 and not arguments.args.r10
         out_rank = 0
-    opts = (args.r21, *args.r10)
+    opts = (arguments.args.r21, *arguments.args.r10)
     out_rank -= sum(map(bool)(opts))
     assert out_rank >= 0
     return out_rank
 
 
-def init():
-    global use_stdin_raw, use_stdin_py, out_rank, args
-    from .arguments import args
-    use_stdin_raw = args.c and args.c[0] == '-'
-    use_stdin_py = args.c and args.c[0] == '.'
-    out_rank = get_out_rank(args)
+print('formatter, arguments.args', arguments.args)
+use_stdin_raw = arguments.args.c and arguments.args.c[0] == '-'
+use_stdin_py = arguments.args.c and arguments.args.c[0] == '.'
+out_rank = get_out_rank(arguments.args)

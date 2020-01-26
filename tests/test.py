@@ -1,8 +1,10 @@
 #!/usr/bin/python3
-from mawk.utils import curry, vector, map, equal
-from mawk.logger import p
+from mawk import arguments, reload
 import pdb
-from mawk import arguments
+from mawk.mawk import main
+from mawk.logger import p
+from mawk.utils import curry, vector, map, equal
+print('test')
 
 dirs = '''\
 0\t~/Dropbox/scripts/cli
@@ -18,9 +20,11 @@ dicts = '''\
 nums = '1,2;3,4;;;;;5,6;7,8;;;'
 
 
-def init(test):
+def init(cmd=None, test=''):
     global mock_stdin
     mock_stdin = MockStdin(test)
+    arguments.init(cmd or ('-d',))
+    reload()
 
 
 def show(out):
@@ -51,10 +55,8 @@ def add(x):
 
 
 def tst_curry():
-    global args
-    from mawk import arguments
-    arguments.init('-d')
-    from mawk.arguments import args
+    #from mawk import arguments
+    init()
     m = map(add)
     assert m([1, 2]) == [2, 3]
     @curry
@@ -89,10 +91,9 @@ def tst_curry():
 
 
 def tst_dir():
-    import mawk
-    init(dirs)
-    cmd = "-", "-d", '-f\t'
-    out = kept, transformed, reduced, formatted = mawk.driver.main(cmd, mock_stdin)
+    cmd = "-", "-d", '-f', '\t'
+    init(cmd, dirs)
+    out = kept, transformed, reduced, formatted = main(cmd, mock_stdin)
     show(out)
     foo = {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert kept == foo
@@ -104,10 +105,9 @@ def tst_dir():
 
 
 def tst_rp():
-    import mawk  # TODO: remove?
-    init(dirs)
     cmd = "-", "-d", '-f\t', '-rp', '"Dropbox" not in V'
-    kept, transformed, reduced, formatted = out = mawk.driver.main(cmd, mock_stdin)
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
     show(out)
     assert kept == {2: {0: '2', 1: '~'}}
     assert transformed == {2: {0: '2', 1: '~'}}
@@ -118,16 +118,15 @@ def tst_rp():
 def tst_cmd():
     import mawk
     cmd = '{1:2}[1]', 'sum(range(100))', '-d'
-    kept, transformed, reduced, formatted = out = mawk.driver.main(cmd)
+    kept, transformed, reduced, formatted = out = main(cmd)
     show(out)
     assert formatted == [2, 4950]
 
 
 def tst_fp():
-    import mawk
-    init(dirs)
     cmd = "-", "-d", '-f\t', '-fp', '"Dropbox" not in V'
-    kept, transformed, reduced, formatted = out = mawk.driver.main(cmd, mock_stdin)
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
     assert transformed == {0: {0: '0'}, 1: {0: '1'}, 2: {0: '2', 1: '~'}}
@@ -136,10 +135,9 @@ def tst_fp():
 
 
 def tst_ft():
-    import mawk
-    init(dirs)
     cmd = "-", "-d", '-f\t', '-ft', 'v*2'
-    kept, transformed, reduced, formatted = out = mawk.driver.main(cmd, mock_stdin)
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
     assert transformed == {0: {0: '00', 1: '~/Dropbox/scripts/cli~/Dropbox/scripts/cli'},
@@ -150,10 +148,9 @@ def tst_ft():
 
 
 def tst_fi():
-    import mawk
-    init(dirs)
     cmd = "-", "-d", '-f\t', '-fi', *'1 20 30'.split()
-    kept, transformed, reduced, formatted = out = mawk.driver.main(cmd, mock_stdin)
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
     show(out)
     assert kept == {0: {1: '~/Dropbox/scripts/cli'}, 1: {1: '~/Dropbox/scripts'}, 2: {1: '~'}}
     assert transformed == {0: {1: '~/Dropbox/scripts/cli'}, 1: {1: '~/Dropbox/scripts'}, 2: {1: '~'}}
@@ -162,25 +159,51 @@ def tst_fi():
 
 
 def tst_ri():
-    import mawk
-    init(dirs)
     cmd = "-", "-d", '-f\t', '-ri', *'1 20 30'.split()
-    kept, transformed, reduced, formatted = out = mawk.driver.main(cmd, mock_stdin)
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
     show(out)
     assert kept == {1: {0: '1', 1: '~/Dropbox/scripts'}}
     assert transformed == {1: {0: '1', 1: '~/Dropbox/scripts'}}
     assert reduced == {1: {0: '1', 1: '~/Dropbox/scripts'}}
     assert formatted == '1 ~/Dropbox/scripts'
 
+def tst_r20():
+    cmd = "-", "-d", '-f\t', '-r20', 'repr(d)[::-1]'
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
+    show(out)
+    assert kept == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
+    assert transformed == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
+    assert reduced == "}}'~' :1 ,'2' :0{ :2 ,}'stpircs/xobporD/~' :1 ,'1' :0{ :1 ,}'ilc/stpircs/xobporD/~' :1 ,'0' :0{ :0{"
+    assert formatted == "}}'~' :1 ,'2' :0{ :2 ,}'stpircs/xobporD/~' :1 ,'1' :0{ :1 ,}'ilc/stpircs/xobporD/~' :1 ,'0' :0{ :0{"
 
-tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft, tst_fi, tst_ri]
+def tst_r21():
+    cmd = "-", "-d", '-f\t', '-r21', 'd[0]'
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
+    show(out)
+    assert kept == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
+    assert transformed == {0: {0: '0', 1: '~/Dropbox/scripts/cli'}, 1: {0: '1', 1: '~/Dropbox/scripts'}, 2: {0: '2', 1: '~'}}
+    assert reduced == {0: '0', 1: '~/Dropbox/scripts/cli'}
+    assert formatted == '0\n~/Dropbox/scripts/cli'
+
+def tst_r10():
+    cmd = "-", "-d", '-f\t', '-r10', 'v[0]'
+    init(cmd, dirs)
+    kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
+    show(out)
+    write_asserts(out)
+
+tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft, tst_fi, tst_ri, tst_r20, tst_r21, tst_r10]
 #tests = tests[-1:]
-#tests = [tst_rp]
+#tests = [tst_ft]
 
 
 def test():
-    arguments.init('-d')
+    init()
     for i, t in enumerate(tests):
+        print('running test:', i, t)
         p(i)
         t()
         p('..............................')

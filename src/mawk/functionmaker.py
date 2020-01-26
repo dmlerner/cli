@@ -1,8 +1,10 @@
-import re
-from .logger import p
-from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const, sub
 from .utils import curry  # used in eval
 from .utils import find # used in make_regex_match_function_string
+from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const, sub
+from .logger import p
+import re
+from .formatter import use_stdin_raw, use_stdin_py
+from . import arguments
 
 def make_regex_match_function_string(x):
     '''
@@ -30,9 +32,21 @@ def make_predicates(i, ix, v, vx):
     return filter(bool)((predicate_maker('wb'[j % 2], j // 2, vals) for j, vals in enumerate((i, ix, v, vx))))
 
 
+def shape(x):
+    dims = []
+    last = x
+    while len(dims) < 10:
+        try:
+            dims.append(len(last))
+            last = last[0][:]
+        except BaseException:
+            break
+    return dims
+
+
 def sub_all(source, *subs):
     alphanumeric = 'Q', '[a-zA-Z0-9_]'
-    p('source', source)
+    p('source, subs', source, subs, shape(subs))
     # replaced = False
     for sub in subs:
         for f, r in sub:
@@ -51,12 +65,14 @@ def sub_all(source, *subs):
 
 @vector
 def make_subs(prefix):
+    p('make_subs', prefix)
     range = r'x\.(Q+),(Q+)', r'x[x.index("\1"): x.index("\2")+1]'  # x.account_name,amount
     numeric_range = r'x([\d]+),([\d]+)', r'x[int(\1):int(\2)+1]'  # x7,9
     numeric_range_start = r'x,([\d]+)', r'x[:int(\1)+1]'  # x,9
     numeric_range_end = r'x([\d]+),', r'x[int(\1):]'  # x7,
     numeric = r'x([\d]+)', r'x[\1]'  # x7
     templates = range, numeric_range, numeric_range_start, numeric_range_end, numeric
+    # pdb.set_trace()
     return map(map(replace('x', prefix)))(templates)
 
 
@@ -112,16 +128,17 @@ def parse_command1(cmd):
 def f(i, d):
     p('parse_command1', i, d),
     k = list(d.keys())
-    K = ''.join(map(str)(k)) # TODO use args.f or similar
+    K = ''.join(map(str)(k)) # TODO use arguments.args.f or similar
     v = list(d.values())
-    V = ''.join(map(str)(v)) # TODO use args.f or similar
+    V = ''.join(map(str)(v)) # TODO use arguments.args.f or similar
     ret = %s
     p('k, v, ret', k, v, ret)
     return ret'''
     # TODO: if foo like bar, ie any(bar in f for f in foo)
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
-    cmd = sub_all(cmd, flatten(make_subs(['k', 'K', 'v', 'V'])))
+    made = make_subs(['k', 'K', 'v', 'V'])
+    cmd = sub_all(cmd, flatten(made))
     return build(template, cmd)
 
 
@@ -148,34 +165,30 @@ def f(d):
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
 
-    cmd = sub_all(cmd, make_subs('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
-    return build(tmeplate, cmd)
+    made = make_subs(('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
+    cmd = sub_all(cmd, flatten(made))
+    return build(template, cmd)
 
-def init():
-    global use_stdin_raw, use_stdin_py
-    from .formatter import use_stdin_raw, use_stdin_py
-    global args
-    from .arguments import args
 
-    global fps, ftps, fts
-    fps = map(parse_command0)(args.fp) + make_predicates(args.fi, args.fix, args.fv, args.fvx)
-    ftps = map(parse_command0)(args.ftp) + make_predicates(args.fti, args.ftix, args.ftv, args.ftvx)
-    fts = map(parse_command0)(args.ft)
+fps = map(parse_command0)(arguments.args.fp) + \
+    make_predicates(arguments.args.fi, arguments.args.fix, arguments.args.fv, arguments.args.fvx)
+ftps = map(parse_command0)(arguments.args.ftp) + \
+    make_predicates(arguments.args.fti, arguments.args.ftix, arguments.args.ftv, arguments.args.ftvx)
+fts = map(parse_command0)(arguments.args.ft)
 
-    global rps, rtps, rts
-    rps = map(parse_command1)(args.rp) + make_predicates(args.ri, args.rix, args.rv, args.rvx)
-    rtps = map(parse_command1)(args.rtp) + make_predicates(args.rti, args.rtix, args.rtv, args.rtvx)
-    rts = map(parse_command1)(args.rt)
+rps = map(parse_command1)(arguments.args.rp) + \
+    make_predicates(arguments.args.ri, arguments.args.rix, arguments.args.rv, arguments.args.rvx)
+rtps = map(parse_command1)(arguments.args.rtp) + \
+    make_predicates(arguments.args.rti, arguments.args.rtix, arguments.args.rtv, arguments.args.rtvx)
+rts = map(parse_command1)(arguments.args.rt)
 
-    global r20, r21, r10
-    r20 = parse_command2(args.r20)
-    r21 = parse_command2(args.r21)
-    r10 = map(parse_command1)(args.r10)
+r20 = parse_command2(arguments.args.r20)
+r21 = parse_command2(arguments.args.r21)
+r10 = map(parse_command1)(arguments.args.r10)
 
-    global cmds
-    if use_stdin_raw:
-        cmds = compose(map(parse_command2)(args.c[1:]))  # command1 in streaming case?
-    elif use_stdin_py:
-        cmds = compose(map(parse_command0)(args.c[1:]))
-    else:
-        cmds = const(apply(None)(map(parse_command)(args.c)))
+if use_stdin_raw:
+    cmds = compose(map(parse_command2)(arguments.args.c[1:]))  # command1 in streaming case?
+elif use_stdin_py:
+    cmds = compose(map(parse_command0)(arguments.args.c[1:]))
+else:
+    cmds = const(apply(None)(map(parse_command)(arguments.args.c)))
