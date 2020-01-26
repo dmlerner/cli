@@ -1,9 +1,6 @@
 #!/usr/bin/python3
-print('arguments')
-import pdb
 import argparse
 import sys
-import importlib
 import mawk
 
 parser = argparse.ArgumentParser()
@@ -88,14 +85,19 @@ parser.add_argument('-test', nargs='?', default='')
 def handle_escapes(x):
     return x.replace('\\n', '\n').replace('\\r', '\r').replace('\\t', '\t')
 
+
 print('imported arguments')
-args = parser.parse_args()
 
 
-def init(x=None):
+def init(x=None, reload=True):
     global args
     print('arguments.init', x)
     args = parser.parse_args(x or sys.argv[1:])
     args.r, args.f, args.R, args.F = map(handle_escapes, (args.r, args.f, args.R, args.F))
     print('arguments.args, init, new: ', args)
-    mawk.reload()
+    if reload:
+        mawk.reload()
+
+
+# args = parser.parse_args()
+init(reload=False) # can't reload on first load

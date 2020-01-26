@@ -49,6 +49,7 @@ def do_reduce(rs):
             rs = r10(rs)
     elif arguments.args.r10:
         p('map r10', rs, r10)
+        pdb.set_trace()
         rs = dict_vmap(r10[0])(rs)
         if len(r10) == 2:
             rs = r10[1](rs)

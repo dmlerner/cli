@@ -1,10 +1,10 @@
 from .utils import curry  # used in eval
 from .utils import vector, replace, map, compose, filter, flatten, identity, apply, const
 from .logger import p
+import pdb
 import re
 from .formatter import use_stdin_raw, use_stdin_py
 from . import arguments
-print('functionmaker')
 
 
 def predicate_maker(mode, arg, vals):
@@ -21,9 +21,21 @@ def make_predicates(i, ix, v, vx):
     return filter(bool)((predicate_maker('wb'[j % 2], j // 2, vals) for j, vals in enumerate((i, ix, v, vx))))
 
 
+def shape(x):
+    dims = []
+    last = x
+    while len(dims) < 10:
+        try:
+            dims.append(len(last))
+            last = last[0][:]
+        except BaseException:
+            break
+    return dims
+
+
 def sub_all(source, *subs):
     alphanumeric = 'Q', '[a-zA-Z0-9_]'
-    p('source', source)
+    p('source, subs', source, subs, shape(subs))
     # replaced = False
     for sub in subs:
         for f, r in sub:
@@ -42,12 +54,14 @@ def sub_all(source, *subs):
 
 @vector
 def make_subs(prefix):
+    p('make_subs', prefix)
     range = r'x\.(Q+),(Q+)', r'x[x.index("\1"): x.index("\2")+1]'  # x.account_name,amount
     numeric_range = r'x([\d]+),([\d]+)', r'x[int(\1):int(\2)+1]'  # x7,9
     numeric_range_start = r'x,([\d]+)', r'x[:int(\1)+1]'  # x,9
     numeric_range_end = r'x([\d]+),', r'x[int(\1):]'  # x7,
     numeric = r'x([\d]+)', r'x[\1]'  # x7
     templates = range, numeric_range, numeric_range_start, numeric_range_end, numeric
+    # pdb.set_trace()
     return map(map(replace('x', prefix)))(templates)
 
 
@@ -106,7 +120,9 @@ def f(i, d):
     # TODO: if foo like bar, ie any(bar in f for f in foo)
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
-    func = template % sub_all(cmd, flatten(make_subs(['k', 'K', 'v', 'V'])))
+    made = make_subs(['k', 'K', 'v', 'V'])
+    p('made', made)
+    func = template % sub_all(cmd, flatten(made))
     p(func)
     exec(compile(func, '<string>', 'exec'))
     return locals()['f']
@@ -135,22 +151,24 @@ def f(d):
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
     # collection[collection.index(symbol) if symbol else 0 or -1 etc]
 
-    func = template % sub_all(cmd, make_subs('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
+    made = make_subs(('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
+    p('made', made)
+    func = template % sub_all(cmd, flatten(made))
     p(func)
     exec(compile(func, '<string>', 'exec'))
     return locals()['f']
 
 
-fps = map(parse_command0)(arguments.args.fp) + make_predicates(arguments.args.fi,
-                                                               arguments.args.fix, arguments.args.fv, arguments.args.fvx)
-ftps = map(parse_command0)(arguments.args.ftp) + make_predicates(arguments.args.fti,
-                                                                 arguments.args.ftix, arguments.args.ftv, arguments.args.ftvx)
+fps = map(parse_command0)(arguments.args.fp) + \
+    make_predicates(arguments.args.fi, arguments.args.fix, arguments.args.fv, arguments.args.fvx)
+ftps = map(parse_command0)(arguments.args.ftp) + \
+    make_predicates(arguments.args.fti, arguments.args.ftix, arguments.args.ftv, arguments.args.ftvx)
 fts = map(parse_command0)(arguments.args.ft)
 
-rps = map(parse_command1)(arguments.args.rp) + make_predicates(arguments.args.ri,
-                                                               arguments.args.rix, arguments.args.rv, arguments.args.rvx)
-rtps = map(parse_command1)(arguments.args.rtp) + make_predicates(arguments.args.rti,
-                                                                 arguments.args.rtix, arguments.args.rtv, arguments.args.rtvx)
+rps = map(parse_command1)(arguments.args.rp) + \
+    make_predicates(arguments.args.ri, arguments.args.rix, arguments.args.rv, arguments.args.rvx)
+rtps = map(parse_command1)(arguments.args.rtp) + \
+    make_predicates(arguments.args.rti, arguments.args.rtix, arguments.args.rtv, arguments.args.rtvx)
 rts = map(parse_command1)(arguments.args.rt)
 
 r20 = parse_command2(arguments.args.r20)
