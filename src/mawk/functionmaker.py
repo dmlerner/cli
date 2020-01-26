@@ -4,22 +4,9 @@ from .utils import vector, replace, map, compose, filter, flatten, identity, app
 from .utils import curry  # used in eval
 from .utils import find # used in make_regex_match_function_string
 
-def make_regex_function_string(x):
-    '''
-    k&foo&
-    k&foo(.ar)&
-    k&foo&bar baz& stuff
-    '''
-    p('make_regex_match_function_string', x)
-    if x.count('&') == 2: # TODO: what if it has multiple regexes? eg k&foo& or k&bar&
-        return make_regex_match_function_string(x)
-    if x.count('&') == 3:
-        return make_regex_sub_function_string(x)
-    assert False
-
 def make_regex_match_function_string(x):
     '''
-    'blah blah k|foo stuff asdf'
+    'blah blah k&foo stuff asdf'
     ->
     blah blah find('foo', 'k') stuff asdf
     '''
@@ -110,7 +97,8 @@ def f(k, v):
 def build(template, cmd):
     function_text = template % cmd
     assert 'def f(' in function_text
-    function_text = make_regex_function_string(function_text)
+    function_text = make_regex_sub_function_string(function_text)
+    function_text = make_regex_match_function_string(function_text)
     p(function_text)
     exec(compile(function_text, '<string>', 'exec'))
     return locals()['f']
