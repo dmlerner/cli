@@ -3,7 +3,6 @@ from functools import reduce as _reduce
 from functools import wraps, partial
 import inspect
 from builtins import map, filter  # guards against reload bugs
-print('utils')
 
 
 def satisfied(f, *args, **kwargs):

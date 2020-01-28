@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-print('mawk')
+#print('mawk')
 from .utils import reduce, dict_vmap, dict_multi_filter, compose, apply
 from .functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
 from . import formatter
@@ -70,7 +70,7 @@ def process(records, ri_start=0):
 
 
 def main(raw_args=None, stdin=None):
-    print('mawk.main', raw_args, arguments.args, stdin and stdin.x)
+    #print('mawk.main', raw_args, arguments.args, stdin and stdin.x)
     if raw_args:
         arguments.init(raw_args)
     stdin = stdin or sys.stdin
@@ -94,8 +94,8 @@ def main(raw_args=None, stdin=None):
                 write_out(formatted)
                 return kept, transformed, reduced, formatted
             else:  # use_stdin_py
-                out = cmds((None, eval(raw)))
-                p('out', out)
+                evaled = eval(raw)
+                out = cmds(evaled)
                 formatted = format_output(out)
                 write_out(formatted)
                 return None, None, None, formatted

@@ -2,7 +2,7 @@ from .utils import dict_kmap, dict_vmap, index_dict, \
     add, split, identity, replace, map, filter, join, dict_v
 from .logger import p
 from . import arguments
-print('formatter')
+#print('formatter')
 
 
 def parse(raw_records, ri_start=0):
@@ -86,7 +86,7 @@ def get_out_rank(args):
     return out_rank
 
 
-print('formatter, arguments.args', arguments.args)
+#print('formatter, arguments.args', arguments.args)
 use_stdin_raw = arguments.args.c and arguments.args.c[0] == '-'
 use_stdin_py = arguments.args.c and arguments.args.c[0] == '.'
 out_rank = get_out_rank(arguments.args)

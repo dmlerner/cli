@@ -92,6 +92,8 @@ def parse_command(cmd):
     # TODO: make indentation less annoying? curly braces?
     cmd = cmd.replace(':', ':;')
     cmd = '\n'.join(cmd.replace('  ', '\t').split(';'))
+    cmd = make_regex_sub_function_string(cmd)
+    cmd = make_regex_match_function_string(cmd)
     # dummy argument makes it work out better because signature matches the command2 case
     return lambda _: eval(cmd)
 
@@ -159,7 +161,7 @@ def f(d):
     dv = sum(cv, [])
     dV  = ''.join(map(str)(dv))
     ret = %s
-    p(rk, rv, ck, cv)
+    p(rk, rv, ck, cv, dV)
     return ret'''
     # TODO: if foo like bar, ie any(bar in f for f in foo)
     # TODO: handle case like xi.,foo by writing find(collection, symbol) ->
@@ -189,6 +191,12 @@ r10 = map(parse_command1)(arguments.args.r10)
 if use_stdin_raw:
     cmds = compose(map(parse_command2)(arguments.args.c[1:]))  # command1 in streaming case?
 elif use_stdin_py:
-    cmds = compose(map(parse_command0)(arguments.args.c[1:]))
+    cmds = compose(
+            map(apply(None))(
+                map(parse_command0)(
+                    arguments.args.c[1:]
+                    )
+                )
+            )
 else:
-    cmds = const(apply(None)(map(parse_command)(arguments.args.c)))
+    cmds = const(apply(None)(map(parse_command)(arguments.args.c))) # compose?
