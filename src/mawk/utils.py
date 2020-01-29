@@ -6,9 +6,11 @@ from builtins import map, filter  # guards against reload bugs
 
 
 def satisfied(f, *args, **kwargs):
-    # TODO: if too many args, fail
+    # TODO/wip: if too many args, fail
+    sig = inspect.signature(f)
+    assert len(args) + len(kwargs) <= len(sig.parameters)
+    # TODO: what if varargs etc? no real upper bound on param list length...
     try:
-        sig = inspect.signature(f)
         sig.bind(*args, **kwargs)
         return True
     except BaseException:
@@ -120,7 +122,8 @@ def dict_map(f, d):
 
 
 def dict_vmap(f):
-    '''why take one arg? answer: because it's convenient to take an element of d.items'''
+    '''why would f take one arg?
+       answer: because it's convenient to take an element of d.items'''
     return dict_map(lambda kv: (kv[0], f(kv[1])))
 
 

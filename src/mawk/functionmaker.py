@@ -119,7 +119,9 @@ def build(template, cmd):
     function_text = make_regex_match_function_string(function_text)
     p(function_text)
     exec(compile(function_text, '<string>', 'exec'))
-    return locals()['f']
+    ret = locals()['f']
+    ret.code = function_text
+    return ret
 
 
 def parse_command1(cmd):
@@ -129,6 +131,9 @@ def parse_command1(cmd):
 @curry
 def f(i, d):
     p('parse_command1', i, d),
+    if not type(d) is dict and type(i) is int:
+        p(type(i), type(d))
+        assert False
     k = list(d.keys())
     K = ''.join(map(str)(k)) # TODO use arguments.args.f or similar
     v = list(d.values())
