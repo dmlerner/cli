@@ -189,14 +189,14 @@ def tst_r21():
     assert formatted == '0\n~/Dropbox/scripts/cli'
 
 def tst_r10():
-    cmd = "-", "-d", '-f\t', '-r10', 'v[0]'
+    cmd = "-", "-d", '-f\t', '-r10', 'v[0]+"asdf"'
     init(cmd, dirs)
     kept, transformed, reduced, formatted = out = main(cmd, mock_stdin)
     show(out)
     write_asserts(out)
 
 tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft, tst_fi, tst_ri, tst_r20, tst_r21, tst_r10]
-#tests = tests[-1:]
+tests = tests[-1:]
 #tests = [tst_ft]
 
 

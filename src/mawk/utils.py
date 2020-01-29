@@ -126,9 +126,15 @@ def dict_vmap(f):
        answer: because it's convenient to take an element of d.items'''
     return dict_map(lambda kv: (kv[0], f(kv[1])))
 
+#def dict_vmap(f):
+    #return dict_dmap(lambda kv: f(kv[1]))
+
 
 def dict_kmap(f):
     return dict_map(lambda kv: (f(kv[0]), kv[1]))
+
+def dict_dmap(f):
+    return dict_map(lambda kv: (kv[0], f(*kv))) # TODO: generalize these dict_.*maps
 
 
 @curry
