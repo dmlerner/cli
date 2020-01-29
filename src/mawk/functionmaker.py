@@ -18,6 +18,11 @@ def make_regex_match_function_string(x):
 def make_regex_sub_function_string(x):
     return sub(r'([^\s&]+)&([^&]+)&([^&]*)&', 'sub($2,$3,$1)', x)
 
+def make_conditional_string(x):
+    ''' a?b:c '''
+    p('cond', 'x', x, 'sub', sub(r'(.*)\?(.*):(.*);', '$2 if $1 else $3', x))
+    return sub(r'\?([^:]+):([^:]+):([^:]*):', '$2 if $1 else $3', x)
+
 def predicate_maker(mode, arg, vals):
     assert mode in 'wb'
     assert arg in (0, 1)
@@ -26,6 +31,8 @@ def predicate_maker(mode, arg, vals):
     vals = set(vals)
     p(mode, arg, vals)
     return lambda k, v: ([k, v][arg] in vals) == (mode == 'w')
+
+# TODO:; ability to add variable to scope
 
 
 def make_predicates(i, ix, v, vx):
@@ -94,6 +101,7 @@ def parse_command(cmd):
     cmd = '\n'.join(cmd.replace('  ', '\t').split(';'))
     cmd = make_regex_sub_function_string(cmd)
     cmd = make_regex_match_function_string(cmd)
+    cmd = make_conditional_string(cmd)
     # dummy argument makes it work out better because signature matches the command2 case
     return lambda _: eval(cmd)
 
@@ -117,6 +125,7 @@ def build(template, cmd):
     assert 'def f(' in function_text
     function_text = make_regex_sub_function_string(function_text)
     function_text = make_regex_match_function_string(function_text)
+    function_text = make_conditional_string(function_text)
     p(function_text)
     exec(compile(function_text, '<string>', 'exec'))
     ret = locals()['f']
