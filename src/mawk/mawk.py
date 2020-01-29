@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #print('mawk')
-from .utils import reduce, dict_vmap, dict_multi_filter, compose, apply, vmap, dict_map, splat
+from .utils import reduce, dict_vmap, dict_multi_filter, compose, apply, vmap, dict_map, splat, dict_dmap
 from .functionmaker import ftps, rtps, fts, rts, cmds, r20, r21, r10, fps, rps
 from . import formatter
 from .formatter import parse, format_output
@@ -49,12 +49,15 @@ def do_reduce(rs):
             rs = r10(rs)
     elif arguments.args.r10:
         p('map r10', rs, r10)
-        #pdb.set_trace()
         #F = splat(r10[0])
         F = r10[0]
         p('potato', rs[0], F.code)
+        #{ k : F(k, rs[k]) for k in rs }
+        #{ k : F(*rs.items()[i]) for i in range(len(rs)) }
         p('potato2', F(0, rs[0]))
-        rs = dict_map(splat(F))(rs)
+        p('potato3', splat(F)((0, rs[0])))
+        rsmapper = dict_dmap(F)
+        rs = rsmapper(rs)
         #rs = vmap(dict_map(r10[0]))(rs)
         if len(r10) == 2:
             rs = r10[1](rs)
