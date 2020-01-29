@@ -4,3 +4,5 @@ out.txt
 .tox/*
 .coverage
 src/mawk.egg-info/*
+desktop.ini
+.cs*
