@@ -8,10 +8,13 @@ parser.add_argument('-d', default=False, action='store_true')  # debug output
 
 # Delimiters
 parser.add_argument('-f', default=' ', nargs='?')  # input field separator
+parser.add_argument('-fl', default=True, action='store_false')  # split lead
 parser.add_argument('-fc', default=True, action='store_false')  # combine consecutive delimiters
 parser.add_argument('-fx', default=True, action='store_false')  # remove field separator
 parser.add_argument('-F', default=' ', nargs='?')  # output field
+
 parser.add_argument('-r', default='\n', nargs='?')  # input record
+parser.add_argument('-rl', default=True, action='store_false')  # split lead
 parser.add_argument('-rc', default=True, action='store_false')  # combine consecutive delimiters
 parser.add_argument('-rx', default=True, action='store_false')  # remove record separator
 parser.add_argument('-R', default='\n', nargs='?')  # output record

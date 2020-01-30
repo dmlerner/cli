@@ -196,7 +196,7 @@ def tst_r10():
     write_asserts(out)
 
 tests = [tst_curry, tst_dir, tst_rp, tst_cmd, tst_fp, tst_ft, tst_fi, tst_ri, tst_r20, tst_r21, tst_r10]
-tests = tests[-1:]
+#tests = tests[-1:]
 #tests = [tst_ft]
 
 

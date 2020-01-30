@@ -156,9 +156,26 @@ def vmap(f, d):
 def kmap(f, d):
     return map(f)(d.keys())
 
+@curry
+def regex_split(pattern, x):
+    return re.split(pattern, x)
+
+
+def split(lead, pattern, x):
+    parts = re.split('(%s)' % pattern, x)
+    parts.insert(0 if lead else -1, '')
+    return list(filter(bool, [a+b for a,b in zip(parts[::2], parts[1::2])]))
 
 @curry
-def split(delim, remove, combine_consecutive, x):
+def split_lead(pattern, x):
+    return split(True, pattern, x)
+
+@curry
+def split_trail(pattern, x):
+    return split(False, pattern, x)
+
+@curry
+def _split(delim, remove, combine_consecutive, x):
     if delim is None:
         return x
     if combine_consecutive:

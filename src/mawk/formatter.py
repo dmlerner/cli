@@ -10,9 +10,9 @@ def parse(raw_records, ri_start=0):
     records = dict_vmap(index_dict)(
         dict_kmap(add(ri_start))(
             index_dict(map(map(field_type))(
-                map(split(arguments.args.f, arguments.args.fx, arguments.args.fc))(
+l                map(split(arguments.args.fl, arguments.args.f))(
                     filter(identity)(
-                        split(arguments.args.r, arguments.args.rx, arguments.args.rc, raw_records.strip())
+                        split(arguments.args.rl, arguments.args.r))
                     ))))))
     return records
 
