@@ -117,7 +117,7 @@ def build(template, cmd):
     assert 'def f(' in function_text
     function_text = make_regex_sub_function_string(function_text)
     function_text = make_regex_match_function_string(function_text)
-    p(function_text)
+    p('function_text', function_text)
     exec(compile(function_text, '<string>', 'exec'))
     ret = locals()['f']
     ret.code = function_text
@@ -175,6 +175,7 @@ def f(d):
     made = make_subs(('rk', 'rK', 'rv', 'rV', 'ck', 'cK', 'cv', 'cV', 'dv', 'dV'))
     cmd = sub_all(cmd, flatten(made))
     return build(template, cmd)
+
 
 
 fps = map(parse_command0)(arguments.args.fp) + \

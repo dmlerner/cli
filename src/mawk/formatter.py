@@ -10,10 +10,10 @@ def parse(raw_records, ri_start=0):
     records = dict_vmap(index_dict)(
         dict_kmap(add(ri_start))(
             index_dict(map(map(field_type))(
-l                map(split(arguments.args.fl, arguments.args.f))(
+                map(split(arguments.args.fl, arguments.args.f))(
                     filter(identity)(
-                        split(arguments.args.rl, arguments.args.r))
-                    ))))))
+                        split(arguments.args.rl, arguments.args.r, raw_records))
+                    )))))
     return records
 
 

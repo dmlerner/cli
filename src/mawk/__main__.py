@@ -1,6 +1,7 @@
 #print('__main__')
 from . import arguments
 from . import mawk
+from . import logger
 
 
 # Fix for broken pipe error I don't quite understand
@@ -10,3 +11,4 @@ signal(SIGPIPE, SIG_DFL)
 if __name__ == '__main__':
     arguments.init() # TODO: reload? combine reload with init?
     kept, transformed, reduced, formatted = mawk.main()
+logger.outfile.close()

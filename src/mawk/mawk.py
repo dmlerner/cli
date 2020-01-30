@@ -54,6 +54,7 @@ def do_reduce(rs):
         rsmapper = dict_dmap(F)
         rs = rsmapper(rs)
         if len(r10) == 2:
+            p('len 2 r10')
             rs = r10[1](rs)
     return rs
 

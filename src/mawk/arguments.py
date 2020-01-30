@@ -11,13 +11,13 @@ parser.add_argument('-f', default=' ', nargs='?')  # input field separator
 parser.add_argument('-fl', default=True, action='store_false')  # split lead
 parser.add_argument('-fc', default=True, action='store_false')  # combine consecutive delimiters
 parser.add_argument('-fx', default=True, action='store_false')  # remove field separator
-parser.add_argument('-F', default=' ', nargs='?')  # output field
+parser.add_argument('-F', default='', nargs='?')  # output field
 
 parser.add_argument('-r', default='\n', nargs='?')  # input record
 parser.add_argument('-rl', default=True, action='store_false')  # split lead
 parser.add_argument('-rc', default=True, action='store_false')  # combine consecutive delimiters
 parser.add_argument('-rx', default=True, action='store_false')  # remove record separator
-parser.add_argument('-R', default='\n', nargs='?')  # output record
+parser.add_argument('-R', default='', nargs='?')  # output record
 
 parser.add_argument('-p', default=False, action='store_true')  # output repr instead of formatted
 
@@ -69,6 +69,7 @@ parser.add_argument('-rt', default=[], nargs='*')  # (ri, { fi: f }) -> { fi: f'
 # TODO: defaults that just args.R.join etc if flag provided without value (do nothing if no flag at al)
 parser.add_argument('-r21', nargs='?')  # { ri: { fi: f} } -> { k: v }
 parser.add_argument('-r10', default=[], nargs='*')  # { k: v } -> v
+parser.add_argument('-rm', default=[], nargs='*')  # { k: v } -> v
 parser.add_argument('-r20', nargs='?')  # { ri: { fi: f} } -> v
 
 
@@ -97,6 +98,8 @@ def init(x=None, reload=True):
     #print('arguments.init', x)
     args = parser.parse_args(x or sys.argv[1:])
     args.r, args.f, args.R, args.F = map(handle_escapes, (args.r, args.f, args.R, args.F))
+    if args.rm: # HACKKKKKK
+        args.r10 = args.rp = args.rm
     #print('arguments.args, init, new: ', args)
     if reload:
         mawk.reload()

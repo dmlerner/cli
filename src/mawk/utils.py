@@ -133,7 +133,7 @@ def dict_vmap(f):
 def dict_kmap(f):
     return dict_map(lambda kv: (f(kv[0]), kv[1]))
 
-def dict_dmap(f):
+def dict_dmap(f): # dict -> dict
     return dict_map(lambda kv: (kv[0], f(*kv))) # TODO: generalize these dict_.*maps
 
 
@@ -160,7 +160,7 @@ def kmap(f, d):
 def regex_split(pattern, x):
     return re.split(pattern, x)
 
-
+@curry
 def split(lead, pattern, x):
     parts = re.split('(%s)' % pattern, x)
     parts.insert(0 if lead else -1, '')
@@ -229,12 +229,15 @@ def splat(f):
 
 @curry
 def find(pattern, string):
-        found = re.findall(pattern, string)  # find all matches anywhere, consuming l->r
+        found = re.search(pattern, string)  # find all matches anywhere, consuming l->r
         if not found:
             return
-        if len(found) == 1:
-            return found[0]
-        return found
+        g = found.groups()
+        if not g:
+            return find('(%s)' % pattern, string)
+        if len(g) == 1:
+            return g[0]
+        return g
 
 @curry
 def sub(pattern, repl, string):
